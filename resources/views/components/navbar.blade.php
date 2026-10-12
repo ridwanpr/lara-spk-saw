@@ -6,41 +6,46 @@
             'icon' => asset('assets/icon/home.svg'),
             'active' => request()->routeIs('dashboard'),
         ],
-        [
+    ];
+
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        $primaryNav[] = [
             'title' => 'Master Aset',
             'url' => 'javascript:void(0)',
             'icon' => asset('assets/icon/box.svg'),
-            'active' => false,
+            'active' => request()->routeIs('admin.assets.*', 'admin.asset-categories.*', 'admin.rooms.*'),
             'children' => [
                 [
                     'title' => 'Data Aset',
-                    'url' => '#',
-                    'active' => false,
+                    'url' => route('admin.assets.index'),
+                    'active' => request()->routeIs('admin.assets.*'),
                 ],
                 [
                     'title' => 'Kategori Aset',
-                    'url' => '#',
-                    'active' => false,
+                    'url' => route('admin.asset-categories.index'),
+                    'active' => request()->routeIs('admin.asset-categories.*'),
                 ],
                 [
                     'title' => 'Data Ruangan',
-                    'url' => '#',
-                    'active' => false,
+                    'url' => route('admin.rooms.index'),
+                    'active' => request()->routeIs('admin.rooms.*'),
                 ],
             ],
-        ],
-        [
-            'title' => 'Tiket Perbaikan',
-            'url' => '#',
-            'icon' => asset('assets/icon/clipboard-list.svg'),
-            'active' => false,
-        ],
-        [
-            'title' => 'Riwayat',
-            'url' => '#',
-            'icon' => asset('assets/icon/history.svg'),
-            'active' => false,
-        ],
+        ];
+    }
+
+    $primaryNav[] = [
+        'title' => 'Tiket Perbaikan',
+        'url' => '#',
+        'icon' => asset('assets/icon/clipboard-list.svg'),
+        'active' => false,
+    ];
+
+    $primaryNav[] = [
+        'title' => 'Riwayat',
+        'url' => '#',
+        'icon' => asset('assets/icon/history.svg'),
+        'active' => false,
     ];
 
     if (auth()->check() && auth()->user()->isAdmin()) {

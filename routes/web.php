@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\AssetCategoryController;
+use App\Http\Controllers\Admin\AssetController;
+use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,5 +16,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('admin.')
         ->group(function (): void {
             Route::resource('users', UserController::class)->except(['show']);
+            Route::resource('rooms', RoomController::class)->except(['show']);
+            Route::resource('asset-categories', AssetCategoryController::class)->except(['show']);
+            Route::resource('assets', AssetController::class)->except(['show']);
         });
 });
