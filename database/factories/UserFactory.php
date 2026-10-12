@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\RoleName;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -25,6 +27,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
+            'role_id' => Role::factory()->staff(),
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
@@ -40,6 +43,45 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Assign Admin role to the user.
+     */
+    public function admin(): static
+    {
+        return $this->state(fn () => [
+            'role_id' => Role::firstOrCreate(
+                ['name' => RoleName::Admin->value],
+                ['description' => 'System Administrator']
+            )->id,
+        ]);
+    }
+
+    /**
+     * Assign Inspector role to the user.
+     */
+    public function inspector(): static
+    {
+        return $this->state(fn () => [
+            'role_id' => Role::firstOrCreate(
+                ['name' => RoleName::Inspector->value],
+                ['description' => 'Inspector / Facilities Verifier']
+            )->id,
+        ]);
+    }
+
+    /**
+     * Assign Staff role to the user.
+     */
+    public function staff(): static
+    {
+        return $this->state(fn () => [
+            'role_id' => Role::firstOrCreate(
+                ['name' => RoleName::Staff->value],
+                ['description' => 'School Staff / Teacher']
+            )->id,
         ]);
     }
 }

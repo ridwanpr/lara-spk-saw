@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('criterias', function (Blueprint $table) {
             $table->id();
-            $table->string("code")->unique();
-            $table->string("name");
+            $table->string('code')->unique();
+            $table->string('name');
             $table->enum('type', ['benefit', 'cost']);
             $table->decimal('weight', 5, 2);
             $table->enum('input_type', ['categorical', 'range'])->default('categorical');

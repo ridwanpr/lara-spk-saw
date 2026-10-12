@@ -2,6 +2,8 @@
 
 namespace App\Actions\Fortify;
 
+use App\Enums\RoleName;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
@@ -16,7 +18,7 @@ class CreateNewUser implements CreatesNewUsers
     /**
      * Validate and create a newly registered user.
      *
-     * @param  array<string, string>  $input
+     * @param  array<string, mixed>  $input
      *
      * @throws ValidationException
      */
@@ -32,9 +34,13 @@ class CreateNewUser implements CreatesNewUsers
                 Rule::unique(User::class),
             ],
             'password' => $this->passwordRules(),
+            'role_id' => ['nullable', 'exists:roles,id'],
         ])->validate();
 
+        $roleId = $input['role_id'] ?? Role::where('name', RoleName::Staff->value)->value('id');
+
         return User::create([
+            'role_id' => $roleId,
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => Hash::make($input['password']),

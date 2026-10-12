@@ -24,7 +24,7 @@ return new class extends Migration
                 'verified',
                 'under_repair',
                 'completed',
-                'rejected'
+                'rejected',
             ])->default('pending_verification');
 
             $table->foreignId('verifier_id')->nullable()->constrained('users')->nullOnDelete();

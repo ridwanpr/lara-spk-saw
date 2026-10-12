@@ -13,11 +13,13 @@ return new class extends Migration
     {
         Schema::create('ticket_evaluations', function (Blueprint $table) {
             $table->id();
-            $table->foreignId("ticket_id")->constrained("repair_tickets")->cascadeOnDelete();
-            $table->foreignId("criteria_id")->constrained("criterias")->cascadeOnDelete();
-            $table->foreignId("sub_criteria_id")->constrained("sub_criterias")->cascadeOnDelete();
+            $table->foreignId('ticket_id')->constrained('repair_tickets')->cascadeOnDelete();
+            $table->foreignId('criteria_id')->constrained('criterias')->cascadeOnDelete();
+            $table->foreignId('sub_criteria_id')->constrained('sub_criterias')->cascadeOnDelete();
             $table->integer('score');
             $table->timestamps();
+
+            $table->unique(['ticket_id', 'criteria_id']);
         });
     }
 

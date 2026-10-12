@@ -13,22 +13,22 @@ return new class extends Migration
     {
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
-            $table->string("code")->unique();
-            $table->string("name");
-            $table->unsignedBigInteger("category_id");
-            $table->unsignedBigInteger("room_id");
-            $table->year("procurement_year");
-            $table->enum("condition", ["good", "damaged", "under_repair"])->default("good");
+            $table->string('code')->unique();
+            $table->string('name');
+            $table->unsignedBigInteger('category_id');
+            $table->unsignedBigInteger('room_id');
+            $table->year('procurement_year');
+            $table->enum('condition', ['good', 'damaged', 'under_repair'])->default('good');
             $table->timestamps();
 
-            $table->foreign("category_id")
-                ->references("id")
-                ->on("asset_categories")
+            $table->foreign('category_id')
+                ->references('id')
+                ->on('asset_categories')
                 ->cascadeOnDelete();
 
-            $table->foreign("room_id")
-                ->references("id")
-                ->on("rooms")
+            $table->foreign('room_id')
+                ->references('id')
+                ->on('rooms')
                 ->cascadeOnDelete();
         });
     }
