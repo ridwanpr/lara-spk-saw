@@ -59,8 +59,8 @@
 
     $sideNav = [
         [
-            'title' => 'Kriteria & Bobot',
-            'url' => '#',
+            'title' => 'Pengaturan SPK',
+            'url' => route('admin.criterias.index'),
             'icon' => asset('assets/icon/settings.svg'),
             'active' => false,
         ],
