@@ -1,1 +1,5 @@
 @import "@tabler/core/dist/css/tabler.min.css";
+
+.input-icon-addon {
+    height: 100%;
+}

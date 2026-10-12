@@ -2,9 +2,9 @@
     $primaryNav = [
         [
             'title' => 'Beranda',
-            'url' => '#',
+            'url' => route('dashboard'),
             'icon' => asset('assets/icon/home.svg'),
-            'active' => true,
+            'active' => request()->routeIs('dashboard'),
         ],
         [
             'title' => 'Master Aset',
@@ -42,6 +42,15 @@
             'active' => false,
         ],
     ];
+
+    if (auth()->check() && auth()->user()->isAdmin()) {
+        $primaryNav[] = [
+            'title' => 'Data User',
+            'url' => route('admin.users.index'),
+            'icon' => asset('assets/icon/users.svg'),
+            'active' => request()->routeIs('admin.users.*'),
+        ];
+    }
 
     $sideNav = [
         [

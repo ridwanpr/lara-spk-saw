@@ -27,7 +27,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'role_id' => Role::factory()->staff(),
+            'role_id' => Role::firstOrCreate(
+                ['name' => RoleName::Staff->value],
+                ['description' => 'School Staff / Teacher']
+            )->id,
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
