@@ -1,0 +1,132 @@
+@php
+    $primaryNav = [
+        [
+            'title' => 'Beranda',
+            'url' => '#',
+            'icon' => asset('assets/icon/home.svg'),
+            'active' => true,
+        ],
+        [
+            'title' => 'Master Aset',
+            'url' => 'javascript:void(0)',
+            'icon' => asset('assets/icon/box.svg'),
+            'active' => false,
+            'children' => [
+                [
+                    'title' => 'Data Aset',
+                    'url' => '#',
+                    'active' => false,
+                ],
+                [
+                    'title' => 'Kategori Aset',
+                    'url' => '#',
+                    'active' => false,
+                ],
+                [
+                    'title' => 'Data Ruangan',
+                    'url' => '#',
+                    'active' => false,
+                ],
+            ],
+        ],
+        [
+            'title' => 'Tiket Perbaikan',
+            'url' => '#',
+            'icon' => asset('assets/icon/clipboard-list.svg'),
+            'active' => false,
+        ],
+        [
+            'title' => 'Riwayat',
+            'url' => '#',
+            'icon' => asset('assets/icon/history.svg'),
+            'active' => false,
+        ],
+    ];
+
+    $sideNav = [
+        [
+            'title' => 'Kriteria & Bobot',
+            'url' => '#',
+            'icon' => asset('assets/icon/settings.svg'),
+            'active' => false,
+        ],
+        [
+            'title' => 'Dokumentasi',
+            'url' => '#',
+            'icon' => asset('assets/icon/file-type-doc.svg'),
+            'active' => false,
+        ],
+    ];
+@endphp
+
+<div class="navbar-expand-md">
+    <div class="collapse navbar-collapse" id="navbar-menu">
+        <div class="navbar">
+            <div class="container-xl">
+                <div class="row flex-column flex-md-row flex-fill align-items-center">
+                    <div class="col">
+                        <!-- BEGIN NAVBAR MENU -->
+                        <nav aria-label="Primary">
+                            <ul class="navbar-nav">
+                                @foreach ($primaryNav as $item)
+                                    @if (!empty($item['children']))
+                                        <li class="nav-item dropdown {{ $item['active'] ?? false ? 'active' : '' }}">
+                                            <a class="nav-link dropdown-toggle" href="{{ $item['url'] ?? '#' }}"
+                                                data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                                aria-expanded="false">
+                                                <span class="nav-link-icon">
+                                                    <img src="{{ $item['icon'] }}" alt="{{ $item['title'] }}"
+                                                        class="icon" width="24" height="24">
+                                                </span>
+                                                <span class="nav-link-title">{{ $item['title'] }}</span>
+                                            </a>
+                                            <div class="dropdown-menu">
+                                                @foreach ($item['children'] as $child)
+                                                    <a class="dropdown-item {{ $child['active'] ?? false ? 'active' : '' }}"
+                                                        href="{{ $child['url'] ?? '#' }}">
+                                                        {{ $child['title'] }}
+                                                    </a>
+                                                @endforeach
+                                            </div>
+                                        </li>
+                                    @else
+                                        <li class="nav-item {{ $item['active'] ?? false ? 'active' : '' }}">
+                                            <a class="nav-link" href="{{ $item['url'] ?? '#' }}">
+                                                <span class="nav-link-icon">
+                                                    <img src="{{ $item['icon'] }}" alt="{{ $item['title'] }}"
+                                                        class="icon" width="24" height="24">
+                                                </span>
+                                                <span class="nav-link-title">{{ $item['title'] }}</span>
+                                            </a>
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </nav>
+                        <!-- END NAVBAR MENU -->
+                    </div>
+
+                    <div class="col col-md-auto">
+                        <!-- BEGIN NAVBAR SIDE -->
+                        <div class="navbar-side">
+                            <ul class="navbar-nav">
+                                @foreach ($sideNav as $item)
+                                    <li class="nav-item {{ $item['active'] ?? false ? 'active' : '' }}">
+                                        <a class="nav-link" href="{{ $item['url'] ?? '#' }}">
+                                            <span class="nav-link-icon">
+                                                <img src="{{ $item['icon'] }}" class="icon" width="24"
+                                                    height="24" alt="{{ $item['title'] }}" />
+                                            </span>
+                                            <span class="nav-link-title">{{ $item['title'] }}</span>
+                                        </a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                        <!-- END NAVBAR SIDE -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
