@@ -54,8 +54,13 @@
                 <form action="{{ route('admin.users.index') }}" method="GET" class="d-flex gap-2 align-items-center">
                     <div class="input-icon">
                         <span class="input-icon-addon h-100">
-                            <img src="{{ asset('assets/icon/search.svg') }}" alt="Cari" class="icon icon-sm"
-                                width="16" height="16">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="icon icon-sm" aria-hidden="true" focusable="false">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                <path d="M21 21l-6 -6" />
+                            </svg>
                         </span>
                         <input type="text" name="search" value="{{ (string) $search }}"
                             class="form-control form-control-sm" placeholder="Cari nama atau email...">
@@ -94,13 +99,13 @@
                         <tr>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <span class="avatar avatar-sm me-2 bg-secondary-lt text-dark fw-bold">
+                                    <span class="avatar avatar-sm me-2 bg-secondary-lt fw-bold">
                                         {{ strtoupper(substr($item->name, 0, 2)) }}
                                     </span>
                                     <div>
-                                        <div class="font-weight-medium text-dark">{{ $item->name }}</div>
+                                        <div class="fw-medium">{{ $item->name }}</div>
                                         @if ($item->id === auth()->id())
-                                            <div class="small text-muted">(Akun Anda)</div>
+                                            <div class="small text-secondary">(Akun Anda)</div>
                                         @endif
                                     </div>
                                 </div>

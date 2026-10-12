@@ -3,3 +3,7 @@
 .input-icon-addon {
     height: 100%;
 }
+
+[data-bs-theme="dark"] img.icon {
+    filter: invert(1);
+}

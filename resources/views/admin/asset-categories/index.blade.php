@@ -17,8 +17,13 @@
             <div class="col-auto ms-auto d-print-none">
                 <a href="{{ route('admin.asset-categories.create') }}"
                     class="btn btn-primary d-inline-flex align-items-center gap-1">
-                    <img src="{{ asset('assets/icon/plus.svg') }}" alt="Tambah" class="icon" width="20"
-                        height="20">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"
+                        aria-hidden="true" focusable="false">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M12 5l0 14" />
+                        <path d="M5 12l14 0" />
+                    </svg>
                     Tambah Kategori
                 </a>
             </div>
@@ -51,8 +56,13 @@
                     class="d-flex gap-2 align-items-center">
                     <div class="input-icon">
                         <span class="input-icon-addon h-100">
-                            <img src="{{ asset('assets/icon/search.svg') }}" alt="Cari" class="icon icon-sm"
-                                width="16" height="16">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" class="icon icon-sm" aria-hidden="true" focusable="false">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                <path d="M21 21l-6 -6" />
+                            </svg>
                         </span>
                         <input type="text" name="search" value="{{ (string) $search }}"
                             class="form-control form-control-sm" placeholder="Cari nama atau deskripsi...">
@@ -81,7 +91,7 @@
                 <tbody>
                     @forelse ($categories as $item)
                         <tr>
-                            <td class="font-weight-medium text-dark">
+                            <td class="fw-medium">
                                 {{ $item->name }}
                             </td>
                             <td class="text-secondary">
