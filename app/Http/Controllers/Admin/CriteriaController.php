@@ -50,6 +50,8 @@ class CriteriaController extends Controller
 
     public function show(Criteria $criteria)
     {
+        $criteria->load(['subCriterias']);
+
         return view('admin.criterias.show', compact('criteria'));
     }
 

@@ -120,6 +120,54 @@
                 </form>
             </div>
         </div>
-        <div class="col-12 col-lg-7"></div>
+        <div class="col-12 col-lg-7">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h3 class="card-title">Sub Kriteria</h3>
+                    <div class="card-actions">
+                        <button type="button" class="btn btn-sm btn-primary">
+                            Tambah
+                        </button>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush">
+                    @forelse ($criteria->subCriterias as $subCriteria)
+                        <div class="list-group-item d-flex align-items-center justify-content-between py-3">
+                            <div class="me-3">
+                                <div class="fw-semibold">
+                                    {{ $subCriteria->description }}
+                                </div>
+
+                                @if ($criteria->input_type->value === 'range')
+                                    <div class="text-secondary small mt-1">
+                                        Rentang: {{ $subCriteria->min_value }} &ndash; {{ $subCriteria->max_value }}
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary-lt">
+                                    Crisp: {{ $subCriteria->crisp_value }}
+                                </span>
+
+                                <div class="btn-list flex-nowrap">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                        Edit
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger">
+                                        Hapus
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-4 text-secondary small">
+                            Belum ada sub kriteria yang ditambahkan.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
