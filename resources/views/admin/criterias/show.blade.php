@@ -125,7 +125,8 @@
                 <div class="card-header">
                     <h3 class="card-title">Sub Kriteria</h3>
                     <div class="card-actions">
-                        <button type="button" class="btn btn-sm btn-primary">
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#create-subcriteria-modal">
                             Tambah
                         </button>
                     </div>
@@ -170,4 +171,6 @@
             </div>
         </div>
     </div>
+
+    @include('admin.criterias.subcriteria.create')
 @endsection

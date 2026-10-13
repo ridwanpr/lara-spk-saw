@@ -1,5 +1,7 @@
 import "@tabler/core/dist/js/tabler-theme.min.js";
-import { Tooltip } from "@tabler/core/dist/js/tabler.esm.min.js";
+import { Modal, Tooltip } from "@tabler/core/dist/js/tabler.esm.min.js";
+
+window.Modal = Modal;
 
 document.addEventListener("click", (event) => {
     const trigger = event.target.closest("[data-bs-theme-value]");
