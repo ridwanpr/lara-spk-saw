@@ -20,6 +20,6 @@ Route::middleware('auth')->group(function (): void {
             Route::resource('rooms', RoomController::class)->except(['show']);
             Route::resource('asset-categories', AssetCategoryController::class)->except(['show']);
             Route::resource('assets', AssetController::class)->except(['show']);
-            Route::resource('criterias', CriteriaController::class);
+            Route::resource('criterias', CriteriaController::class)->except(['edit']);
         });
 });

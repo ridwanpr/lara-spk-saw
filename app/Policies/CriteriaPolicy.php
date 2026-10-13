@@ -30,4 +30,12 @@ class CriteriaPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, Criteria $room): bool
+    {
+        return $user->isAdmin();
+    }
 }

@@ -22,6 +22,8 @@ describe('security and role protection for Criteria endpoints', function (): voi
         $this->get('/admin/criterias')->assertRedirect('/login');
         $this->get('/admin/criterias/create')->assertRedirect('/login');
         $this->post('/admin/criterias', [])->assertRedirect('/login');
+        $this->get("/admin/criterias/{$criteria->id}")->assertRedirect('/login');
+        $this->put("/admin/criterias/{$criteria->id}", [])->assertRedirect('/login');
         $this->delete("/admin/criterias/{$criteria->id}")->assertRedirect('/login');
     });
 
@@ -38,6 +40,14 @@ describe('security and role protection for Criteria endpoints', function (): voi
             'weight' => 0.25,
             'input_type' => CriteriaInputType::Categorical->value,
         ])->assertForbidden();
+        $this->actingAs($staff)->get("/admin/criterias/{$criteria->id}")->assertForbidden();
+        $this->actingAs($staff)->put("/admin/criterias/{$criteria->id}", [
+            'name' => 'Kriteria Uji',
+            'code' => 'C-TEST',
+            'type' => CriteriaType::Benefit->value,
+            'weight' => 0.25,
+            'input_type' => CriteriaInputType::Categorical->value,
+        ])->assertForbidden();
         $this->actingAs($staff)->delete("/admin/criterias/{$criteria->id}")->assertForbidden();
     });
 
@@ -48,6 +58,8 @@ describe('security and role protection for Criteria endpoints', function (): voi
         $this->actingAs($inspector)->get('/admin/criterias')->assertForbidden();
         $this->actingAs($inspector)->get('/admin/criterias/create')->assertForbidden();
         $this->actingAs($inspector)->post('/admin/criterias', [])->assertForbidden();
+        $this->actingAs($inspector)->get("/admin/criterias/{$criteria->id}")->assertForbidden();
+        $this->actingAs($inspector)->put("/admin/criterias/{$criteria->id}", [])->assertForbidden();
         $this->actingAs($inspector)->delete("/admin/criterias/{$criteria->id}")->assertForbidden();
     });
 });
@@ -60,6 +72,7 @@ describe('criteria policy permissions', function (): void {
 
         expect($policy->viewAny($admin))->toBeTrue()
             ->and($policy->create($admin))->toBeTrue()
+            ->and($policy->update($admin, $criteria))->toBeTrue()
             ->and($policy->delete($admin, $criteria))->toBeTrue();
     });
 
@@ -70,6 +83,7 @@ describe('criteria policy permissions', function (): void {
 
         expect($policy->viewAny($staff))->toBeFalse()
             ->and($policy->create($staff))->toBeFalse()
+            ->and($policy->update($staff, $criteria))->toBeFalse()
             ->and($policy->delete($staff, $criteria))->toBeFalse();
     });
 
@@ -80,6 +94,7 @@ describe('criteria policy permissions', function (): void {
 
         expect($policy->viewAny($inspector))->toBeFalse()
             ->and($policy->create($inspector))->toBeFalse()
+            ->and($policy->update($inspector, $criteria))->toBeFalse()
             ->and($policy->delete($inspector, $criteria))->toBeFalse();
     });
 });
@@ -290,6 +305,205 @@ describe('destroy criteria', function (): void {
         $admin = User::factory()->admin()->create();
 
         $response = $this->actingAs($admin)->delete('/admin/criterias/999999');
+
+        $response->assertNotFound();
+    });
+});
+
+describe('show criteria', function (): void {
+    test('admin can access show criteria page and see its details', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->benefit()->categorical()->create([
+            'code' => 'C1',
+            'name' => 'Kondisi Fisik',
+            'weight' => 0.35,
+        ]);
+
+        $response = $this->actingAs($admin)->get("/admin/criterias/{$criteria->id}");
+
+        $response->assertOk();
+        $response->assertViewIs('admin.criterias.show');
+        $response->assertViewHas('criteria', fn (Criteria $item): bool => $item->id === $criteria->id);
+        $response->assertSee('Detail Kriteria');
+        $response->assertSee('Formulir Edit Kriteria');
+        $response->assertSee('Kondisi Fisik');
+        $response->assertSee('C1');
+        $response->assertSee('0.35');
+        $response->assertSee('benefit');
+        $response->assertSee('Kategorikal');
+    });
+
+    test('returns 404 when viewing non-existent criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->get('/admin/criterias/999999');
+
+        $response->assertNotFound();
+    });
+});
+
+describe('update criteria', function (): void {
+    test('admin can update criteria details', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->benefit()->categorical()->create([
+            'code' => 'C1',
+            'name' => 'Kondisi Fisik',
+            'weight' => 0.35,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->put("/admin/criterias/{$criteria->id}", [
+                'name' => 'Kondisi Bangunan',
+                'code' => 'C1-BARU',
+                'type' => CriteriaType::Cost->value,
+                'weight' => 0.40,
+                'input_type' => CriteriaInputType::Range->value,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHas('success', 'Kriteria berhasil diupdate');
+
+        $this->assertDatabaseHas('criterias', [
+            'id' => $criteria->id,
+            'name' => 'Kondisi Bangunan',
+            'code' => 'C1-BARU',
+            'type' => 'cost',
+            'weight' => 0.40,
+            'input_type' => 'range',
+        ]);
+
+        $criteria->refresh();
+        expect($criteria->name)->toBe('Kondisi Bangunan')
+            ->and($criteria->code)->toBe('C1-BARU')
+            ->and($criteria->type)->toBe(CriteriaType::Cost)
+            ->and((float) $criteria->weight)->toBe(0.40)
+            ->and($criteria->input_type)->toBe(CriteriaInputType::Range);
+    });
+
+    test('admin can update criteria without changing unique code', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create([
+            'code' => 'C-TETAP',
+            'name' => 'Nama Lama',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->put("/admin/criterias/{$criteria->id}", [
+                'name' => 'Nama Baru',
+                'code' => 'C-TETAP',
+                'type' => CriteriaType::Benefit->value,
+                'weight' => 0.20,
+                'input_type' => CriteriaInputType::Categorical->value,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHasNoErrors();
+        $response->assertSessionHas('success', 'Kriteria berhasil diupdate');
+
+        $this->assertDatabaseHas('criterias', [
+            'id' => $criteria->id,
+            'name' => 'Nama Baru',
+            'code' => 'C-TETAP',
+        ]);
+    });
+
+    test('validation fails when required fields are missing on update', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create([
+            'name' => 'Kriteria Asli',
+            'code' => 'C-ASLI',
+        ]);
+
+        $response = $this->actingAs($admin)->put("/admin/criterias/{$criteria->id}", []);
+
+        $response->assertSessionHasErrors(['name', 'code', 'type', 'weight', 'input_type']);
+
+        $criteria->refresh();
+        expect($criteria->name)->toBe('Kriteria Asli')
+            ->and($criteria->code)->toBe('C-ASLI');
+    });
+
+    test('validation fails when updating code with existing duplicate code', function (): void {
+        $admin = User::factory()->admin()->create();
+        Criteria::factory()->create(['code' => 'C-EXISTING']);
+        $criteria = Criteria::factory()->create(['code' => 'C-MINE']);
+
+        $response = $this->actingAs($admin)->put("/admin/criterias/{$criteria->id}", [
+            'name' => 'Kriteria Edit',
+            'code' => 'C-EXISTING',
+            'type' => CriteriaType::Benefit->value,
+            'weight' => 0.20,
+            'input_type' => CriteriaInputType::Categorical->value,
+        ]);
+
+        $response->assertSessionHasErrors(['code']);
+
+        $criteria->refresh();
+        expect($criteria->code)->toBe('C-MINE');
+    });
+
+    test('validation fails when updating with invalid type', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+
+        $response = $this->actingAs($admin)->put("/admin/criterias/{$criteria->id}", [
+            'name' => 'Kriteria Invalid Type',
+            'code' => $criteria->code,
+            'type' => 'invalid-type',
+            'weight' => 0.20,
+            'input_type' => CriteriaInputType::Categorical->value,
+        ]);
+
+        $response->assertSessionHasErrors(['type']);
+    });
+
+    test('validation fails when updating with invalid input type', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+
+        $response = $this->actingAs($admin)->put("/admin/criterias/{$criteria->id}", [
+            'name' => 'Kriteria Invalid Input Type',
+            'code' => $criteria->code,
+            'type' => CriteriaType::Benefit->value,
+            'weight' => 0.20,
+            'input_type' => 'invalid-input-type',
+        ]);
+
+        $response->assertSessionHasErrors(['input_type']);
+    });
+
+    test('validation fails when updating with invalid weight values', function (mixed $invalidWeight): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+
+        $response = $this->actingAs($admin)->put("/admin/criterias/{$criteria->id}", [
+            'name' => 'Kriteria Invalid Weight',
+            'code' => $criteria->code,
+            'type' => CriteriaType::Benefit->value,
+            'weight' => $invalidWeight,
+            'input_type' => CriteriaInputType::Categorical->value,
+        ]);
+
+        $response->assertSessionHasErrors(['weight']);
+    })->with([
+        'zero' => [0],
+        'negative' => [-0.25],
+        'greater than one' => [1.05],
+        'non-numeric string' => ['bukan-angka'],
+    ]);
+
+    test('returns 404 when updating non-existent criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->put('/admin/criterias/999999', [
+            'name' => 'Tidak Ada',
+            'code' => 'C-NONE',
+            'type' => CriteriaType::Benefit->value,
+            'weight' => 0.20,
+            'input_type' => CriteriaInputType::Categorical->value,
+        ]);
 
         $response->assertNotFound();
     });

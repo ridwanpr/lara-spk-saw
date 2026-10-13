@@ -42,7 +42,7 @@ class StoreAssetRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['required', 'integer', 'exists:asset_categories,id'],
             'room_id' => ['required', 'integer', 'exists:rooms,id'],
-            'procurement_year' => ['required', 'integer', 'min:1990', 'max:' . ((int) date('Y') + 1)],
+            'procurement_year' => ['required', 'integer', 'min:1990', 'max:'.((int) date('Y') + 1)],
             'condition' => ['required', Rule::enum(AssetCondition::class)],
         ];
     }

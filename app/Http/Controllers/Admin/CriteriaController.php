@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreCriteriaRequest;
+use App\Http\Requests\Admin\UpdateCriteriaRequest;
 use App\Models\Criteria;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 
 class CriteriaController extends Controller
@@ -37,7 +37,7 @@ class CriteriaController extends Controller
             ->with('success', 'Data kriteria berhasil ditambahkan');
     }
 
-    public function destroy(Request $request, Criteria $criteria): RedirectResponse
+    public function destroy(Criteria $criteria): RedirectResponse
     {
         Gate::authorize('delete', $criteria);
 
@@ -46,5 +46,19 @@ class CriteriaController extends Controller
         return redirect()
             ->route('admin.criterias.index')
             ->with('success', 'Kriteria berhasil dihapus.');
+    }
+
+    public function show(Criteria $criteria)
+    {
+        return view('admin.criterias.show', compact('criteria'));
+    }
+
+    public function update(UpdateCriteriaRequest $request, Criteria $criteria)
+    {
+        Gate::authorize('update', $criteria);
+
+        $criteria->update($request->validated());
+
+        return back()->with('success', 'Kriteria berhasil diupdate');
     }
 }

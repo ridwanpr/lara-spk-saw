@@ -20,7 +20,7 @@ class RoomFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Ruang ' . fake()->unique()->word(),
+            'name' => 'Ruang '.fake()->unique()->word(),
             'code' => strtoupper(fake()->unique()->bothify('RM-###')),
         ];
     }

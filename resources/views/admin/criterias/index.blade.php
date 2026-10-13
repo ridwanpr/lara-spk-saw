@@ -83,7 +83,8 @@
                                 {{ $criteria->input_type->value === 'range' ? 'Rentang Nilai' : 'Kategorikal' }}</td>
                             <td>
                                 <div class="btn-list justify-content-end">
-                                    <a href="" class="btn btn-sm btn-outline-secondary">
+                                    <a href="{{ route('admin.criterias.show', $criteria->id) }}"
+                                        class="btn btn-sm btn-outline-secondary">
                                         Detail
                                     </a>
 
