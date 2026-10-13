@@ -111,7 +111,7 @@
                     </div>
                     <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
                         <a href="{{ route('admin.criterias.index') }}" class="btn btn-link link-secondary">
-                            Batal
+                            Kembali
                         </a>
                         <button type="submit" class="btn btn-primary">
                             Simpan
@@ -153,7 +153,13 @@
                                 </span>
 
                                 <div class="btn-list flex-nowrap">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
+                                        data-bs-target="#modal-edit-subcriteria"
+                                        data-url="{{ route('admin.criterias.sub-criterias.update', $subCriteria->id) }}"
+                                        data-description="{{ $subCriteria->description }}"
+                                        data-crisp="{{ $subCriteria->crisp_value }}"
+                                        data-min="{{ $subCriteria->min_value }}"
+                                        data-max="{{ $subCriteria->max_value }}">
                                         Edit
                                     </button>
                                     <button type="button" class="btn btn-sm btn-outline-danger">
@@ -173,4 +179,42 @@
     </div>
 
     @include('admin.criterias.subcriteria.create')
+    @include('admin.criterias.subcriteria.edit')
 @endsection
+@push('script')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editModal = document.getElementById('modal-edit-subcriteria');
+
+            if (editModal) {
+                editModal.addEventListener('show.bs.modal', function(event) {
+                    const button = event.relatedTarget;
+
+                    // If the modal is programmetically opened due to a validation error, stop it from overwriting the old value
+                    if (!button) return;
+
+                    // Extract data from button attributes
+                    const url = button.getAttribute('data-url');
+                    const description = button.getAttribute('data-description');
+                    const crisp = button.getAttribute('data-crisp');
+                    const min = button.getAttribute('data-min');
+                    const max = button.getAttribute('data-max');
+
+                    // Set action forms and save them in hidden inputs as well
+                    const form = document.getElementById('form-edit-subcriteria');
+                    form.setAttribute('action', url);
+                    document.getElementById('edit-form-url').value = url;
+
+                    // Fill in the input form value
+                    document.getElementById('edit-description').value = description || '';
+                    document.getElementById('edit-crisp').value = crisp || '';
+
+                    const inputMin = document.getElementById('edit-min');
+                    const inputMax = document.getElementById('edit-max');
+                    if (inputMin) inputMin.value = min || '';
+                    if (inputMax) inputMax.value = max || '';
+                });
+            }
+        });
+    </script>
+@endpush

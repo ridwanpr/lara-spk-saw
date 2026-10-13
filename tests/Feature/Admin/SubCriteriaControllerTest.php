@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Criteria;
+use App\Models\SubCriteria;
 use App\Models\User;
 use App\Policies\SubCriteriaPolicy;
 use Database\Seeders\RoleSeeder;
@@ -12,63 +13,108 @@ beforeEach(function (): void {
     $this->seed(RoleSeeder::class);
 });
 
-describe('security and role protection for SubCriteria store endpoint', function (): void {
+describe('security and role protection for SubCriteria endpoints', function (): void {
     test('unauthenticated guests are redirected to login', function (): void {
         $criteria = Criteria::factory()->create();
-
-        $response = $this->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
             'description' => 'Sangat Baik',
             'crisp_value' => 5,
         ]);
 
-        $response->assertRedirect('/login');
+        $this->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ])->assertRedirect('/login');
+
+        $this->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+            'edit_description' => 'Sangat Baik',
+            'edit_crisp_value' => 5,
+        ])->assertRedirect('/login');
     });
 
-    test('staff users are forbidden from storing sub criteria', function (): void {
+    test('staff users are forbidden from all sub criteria endpoints', function (): void {
         $staff = User::factory()->staff()->create();
         $criteria = Criteria::factory()->create();
-
-        $response = $this->actingAs($staff)->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
             'description' => 'Sangat Baik',
             'crisp_value' => 5,
         ]);
 
-        $response->assertForbidden();
+        $this->actingAs($staff)->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ])->assertForbidden();
+
+        $this->actingAs($staff)->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+            'edit_description' => 'Sangat Baik',
+            'edit_crisp_value' => 5,
+        ])->assertForbidden();
     });
 
-    test('inspector users are forbidden from storing sub criteria', function (): void {
+    test('inspector users are forbidden from all sub criteria endpoints', function (): void {
         $inspector = User::factory()->inspector()->create();
         $criteria = Criteria::factory()->create();
-
-        $response = $this->actingAs($inspector)->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
             'description' => 'Sangat Baik',
             'crisp_value' => 5,
         ]);
 
-        $response->assertForbidden();
+        $this->actingAs($inspector)->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ])->assertForbidden();
+
+        $this->actingAs($inspector)->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+            'edit_description' => 'Sangat Baik',
+            'edit_crisp_value' => 5,
+        ])->assertForbidden();
     });
 });
 
 describe('sub criteria policy permissions', function (): void {
-    test('admin is authorized to create sub criteria', function (): void {
+    test('admin is authorized for all sub criteria policy abilities', function (): void {
         $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ]);
         $policy = new SubCriteriaPolicy;
 
-        expect($policy->create($admin))->toBeTrue();
+        expect($policy->create($admin))->toBeTrue()
+            ->and($policy->update($admin, $subCriteria))->toBeTrue();
     });
 
-    test('staff is unauthorized to create sub criteria', function (): void {
+    test('staff is unauthorized for all sub criteria policy abilities', function (): void {
         $staff = User::factory()->staff()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ]);
         $policy = new SubCriteriaPolicy;
 
-        expect($policy->create($staff))->toBeFalse();
+        expect($policy->create($staff))->toBeFalse()
+            ->and($policy->update($staff, $subCriteria))->toBeFalse();
     });
 
-    test('inspector is unauthorized to create sub criteria', function (): void {
+    test('inspector is unauthorized for all sub criteria policy abilities', function (): void {
         $inspector = User::factory()->inspector()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ]);
         $policy = new SubCriteriaPolicy;
 
-        expect($policy->create($inspector))->toBeFalse();
+        expect($policy->create($inspector))->toBeFalse()
+            ->and($policy->update($inspector, $subCriteria))->toBeFalse();
     });
 });
 
@@ -203,5 +249,157 @@ describe('store sub criteria', function (): void {
 
         $response->assertNotFound();
         $this->assertDatabaseCount('sub_criterias', 0);
+    });
+});
+
+describe('update sub criteria', function (): void {
+    test('admin can update sub criteria description and crisp value', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->categorical()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Cukup',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+                'edit_description' => 'Sangat Baik Sekali',
+                'edit_crisp_value' => 5,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHas('success', 'Data sub kriteria berhasil diubah');
+
+        $subCriteria->refresh();
+        expect($subCriteria->description)->toBe('Sangat Baik Sekali')
+            ->and($subCriteria->crisp_value)->toBe(5)
+            ->and($subCriteria->min_value)->toBeNull()
+            ->and($subCriteria->max_value)->toBeNull();
+    });
+
+    test('admin can update sub criteria with range values', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->range()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Biaya Awal',
+            'crisp_value' => 2,
+            'min_value' => 100000.00,
+            'max_value' => 200000.00,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+                'edit_description' => 'Biaya Direvisi',
+                'edit_crisp_value' => 3,
+                'edit_min_value' => 200001.00,
+                'edit_max_value' => 500000.00,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHas('success', 'Data sub kriteria berhasil diubah');
+
+        $subCriteria->refresh();
+        expect($subCriteria->description)->toBe('Biaya Direvisi')
+            ->and($subCriteria->crisp_value)->toBe(3)
+            ->and((float) $subCriteria->min_value)->toBe(200001.00)
+            ->and((float) $subCriteria->max_value)->toBe(500000.00);
+    });
+
+    test('validation fails when required fields are missing on update', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Deskripsi Tetap',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", []);
+
+        $response->assertSessionHasErrors(['edit_description', 'edit_crisp_value']);
+
+        $subCriteria->refresh();
+        expect($subCriteria->description)->toBe('Deskripsi Tetap')
+            ->and($subCriteria->crisp_value)->toBe(3);
+    });
+
+    test('validation fails when edit_description exceeds 255 characters', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Deskripsi Tetap',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+                'edit_description' => str_repeat('a', 256),
+                'edit_crisp_value' => 3,
+            ]);
+
+        $response->assertSessionHasErrors(['edit_description']);
+    });
+
+    test('validation fails for invalid edit_crisp_value values', function (mixed $invalidCrisp): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Deskripsi Tetap',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+                'edit_description' => 'Deskripsi Baru',
+                'edit_crisp_value' => $invalidCrisp,
+            ]);
+
+        $response->assertSessionHasErrors(['edit_crisp_value']);
+    })->with([
+        'zero' => [0],
+        'negative' => [-1],
+        'greater than five' => [6],
+        'non integer float' => [2.5],
+        'non numeric string' => ['bukan-angka'],
+    ]);
+
+    test('validation fails when edit_min_value or edit_max_value is non-numeric', function (array $payload, string $errorField): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Deskripsi Tetap',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", array_merge([
+                'edit_description' => 'Deskripsi Update',
+                'edit_crisp_value' => 3,
+            ], $payload));
+
+        $response->assertSessionHasErrors([$errorField]);
+    })->with([
+        'invalid edit_min_value' => [['edit_min_value' => 'bukan-angka'], 'edit_min_value'],
+        'invalid edit_max_value' => [['edit_max_value' => 'bukan-angka'], 'edit_max_value'],
+    ]);
+
+    test('returns 404 when updating non-existent sub criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)
+            ->put('/admin/criterias/sub-criterias/999999', [
+                'edit_description' => 'Update Non Existent',
+                'edit_crisp_value' => 3,
+            ]);
+
+        $response->assertNotFound();
     });
 });

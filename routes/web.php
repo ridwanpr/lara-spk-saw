@@ -23,7 +23,13 @@ Route::middleware('auth')->group(function (): void {
             Route::resource('assets', AssetController::class)->except(['show']);
             Route::resource('criterias', CriteriaController::class)->except(['edit']);
 
-            Route::post('criterias/{criteria}/sub-criterias', [SubCriteriaController::class, 'store'])
-                ->name('criterias.sub-criterias.store');
+            Route::prefix('criterias')
+                ->name('criterias.sub-criterias.')
+                ->group(function () {
+                    Route::post('{criteria}/sub-criterias', [SubCriteriaController::class, 'store'])
+                        ->name('store');
+                    Route::put('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'update'])
+                        ->name('update');
+                });
         });
 });
