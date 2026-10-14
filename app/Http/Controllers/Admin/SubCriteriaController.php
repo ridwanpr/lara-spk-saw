@@ -40,6 +40,10 @@ class SubCriteriaController extends Controller
     {
         Gate::authorize('delete', $subCriteria);
 
+        if ($subCriteria->criteria->is_system) {
+            return back()->with('error', 'Sub-kriteria dari kriteria sistem tidak boleh dihapus.');
+        }
+
         $subCriteria->delete();
 
         return back()

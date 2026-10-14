@@ -80,6 +80,7 @@
                     <tr>
                         <th style="width: 15%;">Kode Ruangan</th>
                         <th>Nama Ruangan</th>
+                        <th>Kategori Ruangan</th>
                         <th style="width: 15%;">Jumlah Aset</th>
                         <th style="width: 20%;">Terakhir Diperbarui</th>
                         <th class="text-end" style="width: 15%;">Aksi</th>
@@ -95,6 +96,9 @@
                             </td>
                             <td class="fw-medium">
                                 {{ $item->name }}
+                            </td>
+                            <td class="text-secondary">
+                                {{ $item->subCriteria->description ?? '-' }}
                             </td>
                             <td class="text-secondary">
                                 <span class="badge bg-blue-lt">
@@ -126,7 +130,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4 text-secondary">
+                            <td colspan="6" class="text-center py-4 text-secondary">
                                 Tidak ada data ruangan yang ditemukan.
                             </td>
                         </tr>

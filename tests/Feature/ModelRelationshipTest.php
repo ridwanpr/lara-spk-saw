@@ -14,6 +14,7 @@ use App\Models\Room;
 use App\Models\SubCriteria;
 use App\Models\TicketEvaluation;
 use App\Models\User;
+use Database\Seeders\CriteriaSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Database\QueryException;
@@ -155,4 +156,42 @@ test('user seeders create users for each role and database seeder executes clean
         ->and($inspector->isInspector())->toBeTrue()
         ->and($staff)->not->toBeNull()
         ->and($staff->isStaff())->toBeTrue();
+});
+
+test('room belongs to sub criteria category', function () {
+    $criteria = Criteria::create([
+        'code' => 'C3',
+        'name' => 'Urgensi Lokasi Ruangan',
+        'type' => CriteriaType::Benefit,
+        'weight' => 0.25,
+        'input_type' => CriteriaInputType::Categorical,
+        'is_system' => true,
+    ]);
+
+    $subCriteria = SubCriteria::create([
+        'criteria_id' => $criteria->id,
+        'description' => 'Ruang Laboratorium',
+        'crisp_value' => 5,
+    ]);
+
+    $room = Room::create([
+        'name' => 'Lab Komputer 1',
+        'code' => 'LAB-KOMP-1',
+        'sub_criteria_id' => $subCriteria->id,
+    ]);
+
+    expect($room->subCriteria)->not->toBeNull()
+        ->and($room->subCriteria->id)->toBe($subCriteria->id)
+        ->and($room->subCriteria->description)->toBe('Ruang Laboratorium');
+});
+
+test('criteria seeder populates default criteria and sub criteria cleanly', function () {
+    $this->seed(CriteriaSeeder::class);
+
+    expect(Criteria::count())->toBe(4)
+        ->and(Criteria::where('code', 'C1')->where('is_system', true)->exists())->toBeTrue()
+        ->and(Criteria::where('code', 'C2')->where('is_system', true)->exists())->toBeTrue()
+        ->and(Criteria::where('code', 'C3')->where('is_system', true)->exists())->toBeTrue()
+        ->and(Criteria::where('code', 'C4')->where('is_system', true)->exists())->toBeTrue()
+        ->and(SubCriteria::count())->toBe(12);
 });

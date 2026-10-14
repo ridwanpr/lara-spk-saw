@@ -595,4 +595,23 @@ describe('destroy sub criteria', function (): void {
 
         $response->assertNotFound();
     });
+
+    test('admin cannot delete sub criteria belonging to a system criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create(['is_system' => true]);
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Sub Kriteria Sistem',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->delete("/admin/criterias/sub-criterias/{$subCriteria->id}");
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHas('error', 'Sub-kriteria dari kriteria sistem tidak boleh dihapus.');
+        $this->assertModelExists($subCriteria);
+        expect($criteria->subCriterias()->count())->toBe(1);
+    });
 });

@@ -4,8 +4,10 @@ use App\Enums\AssetCondition;
 use App\Enums\TicketStatus;
 use App\Models\Asset;
 use App\Models\AssetCategory;
+use App\Models\Criteria;
 use App\Models\RepairTicket;
 use App\Models\Room;
+use App\Models\SubCriteria;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -150,6 +152,127 @@ describe('data ruangan (rooms) management', function (): void {
         $response->assertRedirect('/admin/rooms');
         $response->assertSessionHas('error');
         expect(Room::find($room->id))->not->toBeNull();
+    });
+
+    test('admin can view room create page with category options', function (): void {
+        $admin = User::factory()->admin()->create();
+        $c3 = Criteria::factory()->create(['code' => 'C3']);
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $c3->id,
+            'description' => 'Ruang Laboratorium',
+            'crisp_value' => 5,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/rooms/create');
+
+        $response->assertOk();
+        $response->assertViewIs('admin.rooms.create');
+        $response->assertViewHas('subCriterias');
+        $response->assertSee('Ruang Laboratorium');
+    });
+
+    test('admin can create a room with a valid sub_criteria_id', function (): void {
+        $admin = User::factory()->admin()->create();
+        $c3 = Criteria::factory()->create(['code' => 'C3']);
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $c3->id,
+            'description' => 'Ruang Kelas',
+            'crisp_value' => 5,
+        ]);
+
+        $response = $this->actingAs($admin)->post('/admin/rooms', [
+            'name' => 'Kelas 7A',
+            'code' => 'kls-7a',
+            'sub_criteria_id' => $subCriteria->id,
+        ]);
+
+        $response->assertRedirect('/admin/rooms');
+        $response->assertSessionHas('success');
+
+        $room = Room::where('code', 'KLS-7A')->first();
+        expect($room)->not->toBeNull()
+            ->and($room->sub_criteria_id)->toBe($subCriteria->id);
+    });
+
+    test('validation fails when sub_criteria_id does not exist', function (): void {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->post('/admin/rooms', [
+            'name' => 'Ruang Invalid',
+            'code' => 'R-INV',
+            'sub_criteria_id' => 999999,
+        ]);
+
+        $response->assertSessionHasErrors(['sub_criteria_id']);
+    });
+
+    test('admin can view room edit page with room data and category options', function (): void {
+        $admin = User::factory()->admin()->create();
+        $c3 = Criteria::factory()->create(['code' => 'C3']);
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $c3->id,
+            'description' => 'Ruang Guru / Kantor',
+            'crisp_value' => 3,
+        ]);
+        $room = Room::factory()->create(['sub_criteria_id' => $subCriteria->id]);
+
+        $response = $this->actingAs($admin)->get("/admin/rooms/{$room->id}/edit");
+
+        $response->assertOk();
+        $response->assertViewIs('admin.rooms.edit');
+        $response->assertViewHas('room', fn (Room $item): bool => $item->id === $room->id);
+        $response->assertViewHas('subCriterias');
+        $response->assertSee('Ruang Guru / Kantor');
+    });
+
+    test('admin can update a room sub_criteria_id', function (): void {
+        $admin = User::factory()->admin()->create();
+        $c3 = Criteria::factory()->create(['code' => 'C3']);
+        $subCriteriaA = SubCriteria::create([
+            'criteria_id' => $c3->id,
+            'description' => 'Kategori A',
+            'crisp_value' => 1,
+        ]);
+        $subCriteriaB = SubCriteria::create([
+            'criteria_id' => $c3->id,
+            'description' => 'Kategori B',
+            'crisp_value' => 3,
+        ]);
+        $room = Room::factory()->create(['sub_criteria_id' => $subCriteriaA->id]);
+
+        $response = $this->actingAs($admin)->put("/admin/rooms/{$room->id}", [
+            'name' => $room->name,
+            'code' => $room->code,
+            'sub_criteria_id' => $subCriteriaB->id,
+        ]);
+
+        $response->assertRedirect('/admin/rooms');
+        $room->refresh();
+        expect($room->sub_criteria_id)->toBe($subCriteriaB->id);
+    });
+
+    test('admin sees room category description on index page', function (): void {
+        $admin = User::factory()->admin()->create();
+        $c3 = Criteria::factory()->create(['code' => 'C3']);
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $c3->id,
+            'description' => 'Kategori Ruang Praktik',
+            'crisp_value' => 5,
+        ]);
+        $roomWithCategory = Room::factory()->create([
+            'name' => 'Lab Fisika Modern',
+            'sub_criteria_id' => $subCriteria->id,
+        ]);
+        $roomWithoutCategory = Room::factory()->create([
+            'name' => 'Gudang Belakang',
+            'sub_criteria_id' => null,
+        ]);
+
+        $response = $this->actingAs($admin)->get('/admin/rooms');
+
+        $response->assertOk();
+        $response->assertSee('Kategori Ruang Praktik');
+        $response->assertSee('-');
     });
 });
 

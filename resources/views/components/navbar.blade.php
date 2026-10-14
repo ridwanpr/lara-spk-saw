@@ -55,7 +55,7 @@
         'title' => 'Tiket Perbaikan',
         'url' => route('repair-tickets.index'),
         'icon' => $icons['clipboard-list'],
-        'active' => false,
+        'active' => request()->routeIs('repair-tickets.*'),
     ];
 
     $primaryNav[] = [

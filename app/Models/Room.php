@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Room extends Model
@@ -18,6 +19,7 @@ class Room extends Model
     protected $fillable = [
         'name',
         'code',
+        'sub_criteria_id',
     ];
 
     /**
@@ -28,5 +30,10 @@ class Room extends Model
     public function assets(): HasMany
     {
         return $this->hasMany(Asset::class);
+    }
+
+    public function subCriteria(): BelongsTo
+    {
+        return $this->belongsTo(SubCriteria::class, 'sub_criteria_id');
     }
 }

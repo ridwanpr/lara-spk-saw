@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\Room;
+use App\Models\SubCriteria;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -47,6 +48,7 @@ class UpdateRoomRequest extends FormRequest
                 'max:50',
                 Rule::unique(Room::class, 'code')->ignore($room?->id),
             ],
+            'sub_criteria_id' => ['nullable', 'integer', Rule::exists(SubCriteria::class, 'id')],
         ];
     }
 
@@ -60,6 +62,7 @@ class UpdateRoomRequest extends FormRequest
         return [
             'name' => 'Nama Ruangan',
             'code' => 'Kode Ruangan',
+            'sub_criteria_id' => 'Kategori Ruangan',
         ];
     }
 }

@@ -2,8 +2,13 @@
 
 use App\Enums\TicketStatus;
 use App\Models\Asset;
+use App\Models\Criteria;
 use App\Models\RepairTicket;
+use App\Models\Room;
+use App\Models\SubCriteria;
+use App\Models\TicketEvaluation;
 use App\Models\User;
+use Database\Seeders\CriteriaSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -690,5 +695,467 @@ describe('ticket number generation in Repair Tickets store endpoint', function (
 
         $ticketB = RepairTicket::where('asset_id', $assetB->id)->first();
         expect($ticketB->ticket_number)->toBe($prefix.'0002');
+    });
+});
+
+describe('security and role access for Repair Tickets show endpoint', function (): void {
+    test('unauthenticated guests are redirected to login', function (): void {
+        $ticket = RepairTicket::factory()->create();
+
+        $this->get(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertRedirect(route('login'));
+    });
+
+    test('admin can access repair tickets show endpoint', function (): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->create();
+
+        $this->actingAs($admin)
+            ->get(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertOk()
+            ->assertViewIs('shared.repair-tickets.show');
+    });
+
+    test('inspector can access repair tickets show endpoint', function (): void {
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->create();
+
+        $this->actingAs($inspector)
+            ->get(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertOk()
+            ->assertViewIs('shared.repair-tickets.show');
+    });
+
+    test('staff can access repair tickets show endpoint', function (): void {
+        $staff = User::factory()->staff()->create();
+        $ticket = RepairTicket::factory()->create(['reporter_id' => $staff->id]);
+
+        $this->actingAs($staff)
+            ->get(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertOk()
+            ->assertViewIs('shared.repair-tickets.show');
+    });
+
+    test('returns 404 when repair ticket is not found by ticket number', function (): void {
+        $admin = User::factory()->admin()->create();
+
+        $this->actingAs($admin)
+            ->get(route('repair-tickets.show', 'TCK-NONEXISTENT'))
+            ->assertNotFound();
+    });
+});
+
+describe('repair ticket details display (show)', function (): void {
+    test('displays ticket details, asset info, reporter, and damage description', function (): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create([
+            'damage_description' => 'Layar LCD proyektor pecah.',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('repair-tickets.show', $ticket->ticket_number));
+
+        $response->assertOk();
+        $response->assertViewHasAll(['repairTicket', 'criterias', 'ticketPriority']);
+        $response->assertSeeText($ticket->ticket_number);
+        $response->assertSeeText($ticket->asset->name);
+        $response->assertSeeText($ticket->asset->code);
+        $response->assertSeeText($ticket->asset->room->name);
+        $response->assertSeeText($ticket->asset->category->name);
+        $response->assertSeeText('Layar LCD proyektor pecah.');
+        $response->assertSeeText($ticket->reporter->name);
+    });
+
+    test('shows verification form to admin and inspector when ticket is pending verification', function (): void {
+        $admin = User::factory()->admin()->create();
+        $inspector = User::factory()->inspector()->create();
+        $staff = User::factory()->staff()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $adminResponse = $this->actingAs($admin)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $adminResponse->assertSeeText('Verifikasi & Isi Pemeriksaan');
+        $adminResponse->assertSee(route('repair-tickets.verify', $ticket->id));
+
+        $inspectorResponse = $this->actingAs($inspector)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $inspectorResponse->assertSeeText('Verifikasi & Isi Pemeriksaan');
+        $inspectorResponse->assertSee(route('repair-tickets.verify', $ticket->id));
+
+        $staffResponse = $this->actingAs($staff)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $staffResponse->assertDontSeeText('Verifikasi & Isi Pemeriksaan');
+        $staffResponse->assertDontSeeText('Tindakan Laporan');
+    });
+
+    test('displays verification details, evaluations, and SAW priority badge when ticket is verified', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $admin = User::factory()->admin()->create();
+        $verifier = User::factory()->inspector()->create(['name' => 'Bambang Verifikator']);
+        $ticket = RepairTicket::factory()->verified()->create([
+            'verifier_id' => $verifier->id,
+            'estimated_cost' => 350000.00,
+        ]);
+
+        $criterias = Criteria::all();
+        foreach ($criterias as $criteria) {
+            TicketEvaluation::create([
+                'ticket_id' => $ticket->id,
+                'criteria_id' => $criteria->id,
+                'sub_criteria_id' => $criteria->subCriterias->first()->id,
+                'score' => $criteria->subCriterias->first()->crisp_value,
+            ]);
+        }
+
+        $response = $this->actingAs($admin)
+            ->get(route('repair-tickets.show', $ticket->ticket_number));
+
+        $response->assertOk();
+        $response->assertSee('Bambang Verifikator');
+        $response->assertSee('350.000');
+        $response->assertSee('Rekomendasi Antrean');
+        $response->assertSee('#1');
+    });
+});
+
+describe('security and role access for Repair Tickets verify endpoint', function (): void {
+    test('unauthenticated guests cannot verify a ticket and are redirected to login', function (): void {
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $this->post(route('repair-tickets.verify', $ticket->id), [
+            'estimated_cost' => 100000,
+            'evaluations' => [],
+        ])->assertRedirect(route('login'));
+    });
+
+    test('staff user is forbidden from verifying a repair ticket', function (): void {
+        $staff = User::factory()->staff()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $this->actingAs($staff)->post(route('repair-tickets.verify', $ticket->id), [
+            'estimated_cost' => 100000,
+            'evaluations' => [],
+        ])->assertForbidden();
+    });
+
+    test('cannot verify a ticket that is already verified or in non-pending status', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $inspector = User::factory()->inspector()->create();
+        $verifiedTicket = RepairTicket::factory()->verified()->create();
+        $c1 = Criteria::where('code', 'C1')->firstOrFail();
+
+        $response = $this->actingAs($inspector)
+            ->from(route('repair-tickets.show', $verifiedTicket->ticket_number))
+            ->post(route('repair-tickets.verify', $verifiedTicket->id), [
+                'estimated_cost' => 200000,
+                'evaluations' => [
+                    $c1->id => $c1->subCriterias->first()->id,
+                ],
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $verifiedTicket->ticket_number));
+        $response->assertSessionHas('error', 'Tiket ini sudah diverifikasi sebelumnya atau statusnya tidak valid.');
+    });
+
+    test('returns 404 when verifying a non-existent ticket id', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $inspector = User::factory()->inspector()->create();
+        $c1 = Criteria::where('code', 'C1')->firstOrFail();
+
+        $this->actingAs($inspector)
+            ->post(route('repair-tickets.verify', 999999), [
+                'estimated_cost' => 200000,
+                'evaluations' => [
+                    $c1->id => $c1->subCriterias->first()->id,
+                ],
+            ])
+            ->assertNotFound();
+    });
+});
+
+describe('validation for Repair Tickets verify endpoint', function (): void {
+    test('validates required fields estimated_cost and evaluations', function (): void {
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($inspector)
+            ->post(route('repair-tickets.verify', $ticket->id), []);
+
+        $response->assertSessionHasErrors(['estimated_cost', 'evaluations']);
+    });
+
+    test('validates estimated_cost must be numeric and non-negative', function (mixed $invalidCost): void {
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($inspector)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => $invalidCost,
+                'evaluations' => [],
+            ]);
+
+        $response->assertSessionHasErrors(['estimated_cost']);
+    })->with([
+        'negative' => [-50000],
+        'non-numeric' => ['bukan-angka'],
+    ]);
+
+    test('validates evaluations for manual criteria like C1', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+        $c1 = Criteria::where('code', 'C1')->firstOrFail();
+
+        // Missing C1 evaluation
+        $response = $this->actingAs($inspector)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => 150000,
+                'evaluations' => [],
+            ]);
+        $response->assertSessionHasErrors(["evaluations.{$c1->id}"]);
+
+        // Invalid sub criteria id for C1
+        $invalidResponse = $this->actingAs($inspector)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => 150000,
+                'evaluations' => [
+                    $c1->id => 999999,
+                ],
+            ]);
+        $invalidResponse->assertSessionHasErrors(["evaluations.{$c1->id}"]);
+    });
+});
+
+describe('ticket verification and automated criteria evaluation', function (): void {
+    test('inspector can verify ticket and system automatically evaluates all criteria', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $inspector = User::factory()->inspector()->create();
+
+        $criterias = Criteria::with('subCriterias')->get()->keyBy('code');
+        $c1 = $criterias->get('C1');
+        $c2 = $criterias->get('C2');
+        $c3 = $criterias->get('C3');
+        $c4 = $criterias->get('C4');
+
+        // C3 sub criteria: 'Ruang Kelas / Lab Komputer' (crisp 5)
+        $labSubCriteria = $c3->subCriterias->firstWhere('crisp_value', 5);
+        $room = Room::factory()->create(['sub_criteria_id' => $labSubCriteria->id]);
+
+        // C4 asset procurement year: now()->year - 3 -> 3 years old (crisp 3 for 2-4 years)
+        $asset = Asset::factory()->create([
+            'room_id' => $room->id,
+            'procurement_year' => now()->year - 3,
+        ]);
+
+        $ticket = RepairTicket::factory()->pendingVerification()->create([
+            'asset_id' => $asset->id,
+        ]);
+
+        // C1 chosen: 'Rusak Sedang' (crisp 3)
+        $c1SubCriteria = $c1->subCriterias->firstWhere('crisp_value', 3);
+
+        // C2 estimated cost: 150000 (< 250000, crisp 1)
+        $estimatedCost = 150000;
+
+        $response = $this->actingAs($inspector)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => $estimatedCost,
+                'evaluations' => [
+                    $c1->id => $c1SubCriteria->id,
+                ],
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success', 'Laporan tiket berhasil diverifikasi dan dievaluasi.');
+
+        $ticket->refresh();
+        expect($ticket->status)->toBe(TicketStatus::Verified)
+            ->and($ticket->verifier_id)->toBe($inspector->id)
+            ->and($ticket->verified_at)->not->toBeNull()
+            ->and((float) $ticket->estimated_cost)->toBe(150000.0);
+
+        // Check evaluations created in database
+        $c1Eval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $c1->id)->first();
+        expect($c1Eval)->not->toBeNull()
+            ->and($c1Eval->sub_criteria_id)->toBe($c1SubCriteria->id)
+            ->and($c1Eval->score)->toBe(3);
+
+        $c2Eval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $c2->id)->first();
+        expect($c2Eval)->not->toBeNull()
+            ->and($c2Eval->score)->toBe(1);
+
+        $c3Eval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $c3->id)->first();
+        expect($c3Eval)->not->toBeNull()
+            ->and($c3Eval->sub_criteria_id)->toBe($labSubCriteria->id)
+            ->and($c3Eval->score)->toBe(5);
+
+        $c4Eval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $c4->id)->first();
+        expect($c4Eval)->not->toBeNull()
+            ->and($c4Eval->score)->toBe(3);
+    });
+
+    test('admin can also verify a repair ticket', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $admin = User::factory()->admin()->create();
+        $c1 = Criteria::where('code', 'C1')->firstOrFail();
+        $c1Sub = $c1->subCriterias->first();
+
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => 500000,
+                'evaluations' => [
+                    $c1->id => $c1Sub->id,
+                ],
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success');
+
+        expect($ticket->fresh()->status)->toBe(TicketStatus::Verified)
+            ->and($ticket->fresh()->verifier_id)->toBe($admin->id);
+    });
+
+    test('sets C3 score to 0 when asset room has no category sub criteria', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $admin = User::factory()->admin()->create();
+        $c1 = Criteria::where('code', 'C1')->firstOrFail();
+        $c3 = Criteria::where('code', 'C3')->firstOrFail();
+        $c1Sub = $c1->subCriterias->first();
+
+        $roomWithoutCategory = Room::factory()->create(['sub_criteria_id' => null]);
+        $asset = Asset::factory()->create(['room_id' => $roomWithoutCategory->id]);
+        $ticket = RepairTicket::factory()->pendingVerification()->create(['asset_id' => $asset->id]);
+
+        $this->actingAs($admin)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => 300000,
+                'evaluations' => [$c1->id => $c1Sub->id],
+            ]);
+
+        $c3Eval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $c3->id)->first();
+        expect($c3Eval)->toBeNull();
+    });
+
+    test('evaluates custom non-system range and categorical criteria during verification', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $admin = User::factory()->admin()->create();
+        $c1 = Criteria::where('code', 'C1')->firstOrFail();
+        $c3 = Criteria::where('code', 'C3')->firstOrFail();
+        $room = Room::factory()->create(['sub_criteria_id' => $c3->subCriterias->first()->id]);
+        $asset = Asset::factory()->create(['room_id' => $room->id, 'procurement_year' => now()->year]);
+
+        // Custom categorical criteria
+        $customCat = Criteria::factory()->categorical()->create(['code' => 'C5', 'is_system' => false]);
+        $catSub = SubCriteria::create(['criteria_id' => $customCat->id, 'description' => 'Tinggi', 'crisp_value' => 5]);
+
+        // Custom range criteria
+        $customRange = Criteria::factory()->range()->create(['code' => 'C6', 'is_system' => false]);
+        $rangeSub = SubCriteria::create(['criteria_id' => $customRange->id, 'description' => '10-20 unit', 'crisp_value' => 4, 'min_value' => 10, 'max_value' => 20]);
+
+        $ticket = RepairTicket::factory()->pendingVerification()->create(['asset_id' => $asset->id]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.verify', $ticket->id), [
+                'estimated_cost' => 200000,
+                'evaluations' => [
+                    $c1->id => $c1->subCriterias->first()->id,
+                    $customCat->id => $catSub->id,
+                    $customRange->id => 15,
+                ],
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number));
+
+        $catEval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $customCat->id)->first();
+        expect($catEval->sub_criteria_id)->toBe($catSub->id)
+            ->and($catEval->score)->toBe(5);
+
+        $rangeEval = TicketEvaluation::where('ticket_id', $ticket->id)->where('criteria_id', $customRange->id)->first();
+        expect($rangeEval->sub_criteria_id)->toBe($rangeSub->id)
+            ->and($rangeEval->score)->toBe(4);
+    });
+});
+
+describe('SAW priority calculation and verified tickets ordering', function (): void {
+    test('orders verified tickets by SAW rank ascending on index when filtered by status verified', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $admin = User::factory()->admin()->create();
+
+        $criterias = Criteria::all()->keyBy('code');
+        $c1 = $criterias->get('C1');
+        $c2 = $criterias->get('C2');
+        $c3 = $criterias->get('C3');
+        $c4 = $criterias->get('C4');
+
+        // Ticket High Priority: high benefit scores, low cost score
+        $ticketHigh = RepairTicket::factory()->verified()->create(['ticket_number' => 'TCK-HIGH']);
+        TicketEvaluation::create(['ticket_id' => $ticketHigh->id, 'criteria_id' => $c1->id, 'sub_criteria_id' => $c1->subCriterias->firstWhere('crisp_value', 5)->id, 'score' => 5]);
+        TicketEvaluation::create(['ticket_id' => $ticketHigh->id, 'criteria_id' => $c2->id, 'sub_criteria_id' => $c2->subCriterias->firstWhere('crisp_value', 1)->id, 'score' => 1]);
+        TicketEvaluation::create(['ticket_id' => $ticketHigh->id, 'criteria_id' => $c3->id, 'sub_criteria_id' => $c3->subCriterias->firstWhere('crisp_value', 5)->id, 'score' => 5]);
+        TicketEvaluation::create(['ticket_id' => $ticketHigh->id, 'criteria_id' => $c4->id, 'sub_criteria_id' => $c4->subCriterias->firstWhere('crisp_value', 5)->id, 'score' => 5]);
+
+        // Ticket Low Priority: low benefit scores, high cost score
+        $ticketLow = RepairTicket::factory()->verified()->create(['ticket_number' => 'TCK-LOW']);
+        TicketEvaluation::create(['ticket_id' => $ticketLow->id, 'criteria_id' => $c1->id, 'sub_criteria_id' => $c1->subCriterias->firstWhere('crisp_value', 1)->id, 'score' => 1]);
+        TicketEvaluation::create(['ticket_id' => $ticketLow->id, 'criteria_id' => $c2->id, 'sub_criteria_id' => $c2->subCriterias->firstWhere('crisp_value', 5)->id, 'score' => 5]);
+        TicketEvaluation::create(['ticket_id' => $ticketLow->id, 'criteria_id' => $c3->id, 'sub_criteria_id' => $c3->subCriterias->firstWhere('crisp_value', 1)->id, 'score' => 1]);
+        TicketEvaluation::create(['ticket_id' => $ticketLow->id, 'criteria_id' => $c4->id, 'sub_criteria_id' => $c4->subCriterias->firstWhere('crisp_value', 1)->id, 'score' => 1]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('repair-tickets.index', ['status' => TicketStatus::Verified->value]));
+
+        $response->assertOk();
+        /** @var LengthAwarePaginator $tickets */
+        $tickets = $response->viewData('repairTickets');
+        expect($tickets->first()->id)->toBe($ticketHigh->id)
+            ->and($tickets->last()->id)->toBe($ticketLow->id);
+
+        $response->assertSeeText('Urutan #1');
+        $response->assertSeeText('Urutan #2');
+    });
+
+    test('resolves tie in SAW priority score by prioritizing earlier created ticket', function (): void {
+        $this->seed(CriteriaSeeder::class);
+        $admin = User::factory()->admin()->create();
+
+        $criterias = Criteria::all()->keyBy('code');
+        $c1 = $criterias->get('C1');
+        $c2 = $criterias->get('C2');
+        $c3 = $criterias->get('C3');
+        $c4 = $criterias->get('C4');
+
+        $c1Sub = $c1->subCriterias->first();
+        $c2Sub = $c2->subCriterias->first();
+        $c3Sub = $c3->subCriterias->first();
+        $c4Sub = $c4->subCriterias->first();
+
+        $ticketOld = RepairTicket::factory()->verified()->create([
+            'created_at' => now()->subHours(2),
+            'ticket_number' => 'TCK-OLD-001',
+        ]);
+        $ticketNew = RepairTicket::factory()->verified()->create([
+            'created_at' => now(),
+            'ticket_number' => 'TCK-NEW-002',
+        ]);
+
+        foreach ([$ticketOld, $ticketNew] as $ticket) {
+            TicketEvaluation::create(['ticket_id' => $ticket->id, 'criteria_id' => $c1->id, 'sub_criteria_id' => $c1Sub->id, 'score' => $c1Sub->crisp_value]);
+            TicketEvaluation::create(['ticket_id' => $ticket->id, 'criteria_id' => $c2->id, 'sub_criteria_id' => $c2Sub->id, 'score' => $c2Sub->crisp_value]);
+            TicketEvaluation::create(['ticket_id' => $ticket->id, 'criteria_id' => $c3->id, 'sub_criteria_id' => $c3Sub->id, 'score' => $c3Sub->crisp_value]);
+            TicketEvaluation::create(['ticket_id' => $ticket->id, 'criteria_id' => $c4->id, 'sub_criteria_id' => $c4Sub->id, 'score' => $c4Sub->crisp_value]);
+        }
+
+        $response = $this->actingAs($admin)->get(route('repair-tickets.index', ['status' => TicketStatus::Verified->value]));
+
+        $response->assertOk();
+        /** @var LengthAwarePaginator $tickets */
+        $tickets = $response->viewData('repairTickets');
+        expect($tickets->first()->id)->toBe($ticketOld->id)
+            ->and($tickets->last()->id)->toBe($ticketNew->id);
+
+        /** @var array $priorities */
+        $priorities = $response->viewData('priorities');
+        expect($priorities[$ticketOld->id]['rank'])->toBe(1)
+            ->and($priorities[$ticketNew->id]['rank'])->toBe(2)
+            ->and($priorities[$ticketOld->id]['score'])->toBe($priorities[$ticketNew->id]['score']);
     });
 });

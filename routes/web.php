@@ -44,5 +44,8 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/', [RepairTicketController::class, 'index'])->name('index');
             Route::get('/create', [RepairTicketController::class, 'create'])->name('create');
             Route::post('/', [RepairTicketController::class, 'store'])->name('store');
+            Route::get('/{ticketNumber}', [RepairTicketController::class, 'show'])->name('show');
+
+            Route::post('/verify/{ticketId}', [RepairTicketController::class, 'verify'])->name('verify');
         });
 });

@@ -98,6 +98,7 @@
                         <th>Keterangan Kerusakan</th>
                         <th>Pelapor</th>
                         <th>Status</th>
+                        <th>Prioritas</th>
                         <th class="w-1 text-end">Aksi</th>
                     </tr>
                 </thead>
@@ -135,15 +136,29 @@
                                 </span>
                             </td>
 
+                            <td class="text-nowrap">
+                                @if (isset($priorities[$ticket->id]))
+                                    <div class="fw-medium text-body">
+                                        Urutan #{{ $priorities[$ticket->id]['rank'] }}
+                                    </div>
+                                    <div class="text-secondary small">
+                                        Skor: {{ number_format($priorities[$ticket->id]['score'], 2) }}
+                                    </div>
+                                @else
+                                    <span class="text-secondary">-</span>
+                                @endif
+                            </td>
+
                             <td class="text-end text-nowrap">
-                                <a href="#" class="btn btn-sm btn-outline-secondary">
+                                <a href="{{ route('repair-tickets.show', $ticket->ticket_number) }}"
+                                    class="btn btn-sm btn-outline-secondary">
                                     Detail
                                 </a>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-5 text-secondary">
+                            <td colspan="7" class="text-center py-5 text-secondary">
                                 <div class="mb-1 fw-medium">Data tiket tidak ditemukan</div>
                                 <div class="small">
                                     {{ $search !== '' || $status !== '' ? 'Tidak ada tiket yang cocok dengan kriteria filter.' : 'Belum ada laporan perbaikan aset yang masuk.' }}

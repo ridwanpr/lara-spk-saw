@@ -35,91 +35,154 @@
         </div>
     @endif
 
-
     <div class="row">
         <div class="col-12 col-lg-5">
             <div class="card shadow-sm">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between items-center">
                     <h3 class="card-title">Formulir Edit Kriteria</h3>
+                    @if ($criteria->is_system)
+                        <span class="badge bg-purple-lt">Kriteria Sistem</span>
+                    @endif
                 </div>
-                <form action="{{ route('admin.criterias.update', $criteria->id) }}" method="POST" autocomplete="off">
-                    @csrf
-                    @method('PUT')
+
+                @if ($criteria->is_system)
                     <div class="card-body">
                         {{-- Nama Kriteria --}}
                         <div class="mb-3">
-                            <label class="form-label required">Nama Kriteria</label>
-                            <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
-                                value="{{ $criteria->name }}" autofocus>
-                            @error('name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Nama Kriteria</label>
+                            <input type="text" class="form-control" value="{{ $criteria->name }}" disabled>
                         </div>
 
                         {{-- Kode Kriteria --}}
                         <div class="mb-3">
-                            <label class="form-label required">Kode Kriteria</label>
-                            <input type="text" name="code" class="form-control @error('code') is-invalid @enderror"
-                                placeholder="Contoh: C1, C2, C3" value="{{ (string) $criteria->code }}" required>
-                            @error('code')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Kode Kriteria</label>
+                            <input type="text" class="form-control" value="{{ (string) $criteria->code }}" disabled>
                         </div>
 
                         {{-- Atribut (Type) --}}
                         <div class="mb-3">
-                            <label class="form-label required">Atribut</label>
-                            <select class="form-select @error('type') is-invalid @enderror" name="type" required>
+                            <label class="form-label">Atribut</label>
+                            <select class="form-select" disabled>
                                 <option value="benefit" {{ $criteria->type->value === 'benefit' ? 'selected' : '' }}>
-                                    Benefit</option>
-                                <option value="cost" {{ $criteria->type->value === 'cost' ? 'selected' : '' }}>Cost
+                                    Benefit
+                                </option>
+                                <option value="cost" {{ $criteria->type->value === 'cost' ? 'selected' : '' }}>
+                                    Cost
                                 </option>
                             </select>
-                            @error('type')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
 
                         {{-- Bobot (Weight) --}}
                         <div class="mb-3">
-                            <label class="form-label required">Bobot</label>
-                            <input type="number" step="0.01" min="0.01" max="1" name="weight"
-                                class="form-control @error('weight') is-invalid @enderror" placeholder="Contoh: 0.25"
-                                value="{{ $criteria->weight }}" required>
-                            @error('weight')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Bobot</label>
+                            <input type="number" class="form-control" value="{{ $criteria->weight }}" disabled>
                         </div>
 
                         {{-- Tipe Penilaian (Input Type) --}}
                         <div class="mb-3">
-                            <label class="form-label required">Tipe Penilaian</label>
-                            <select class="form-select @error('input_type') is-invalid @enderror" name="input_type"
-                                required>
-
+                            <label class="form-label">Tipe Penilaian</label>
+                            <select class="form-select" disabled>
                                 <option value="range" {{ $criteria->input_type->value === 'range' ? 'selected' : '' }}>
                                     Rentang Nilai
                                 </option>
                                 <option value="categorical"
                                     {{ $criteria->input_type->value === 'categorical' ? 'selected' : '' }}>
-                                    Kategorikal</option>
+                                    Kategorikal
+                                </option>
                             </select>
-                            @error('input_type')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
                         </div>
                     </div>
-                    <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                    <div class="card-footer bg-transparent">
                         <a href="{{ route('admin.criterias.index') }}" class="btn btn-link link-secondary">
                             Kembali
                         </a>
-                        <button type="submit" class="btn btn-primary">
-                            Simpan
-                        </button>
                     </div>
-                </form>
+                @else
+                    <form action="{{ route('admin.criterias.update', $criteria->id) }}" method="POST" autocomplete="off">
+                        @csrf
+                        @method('PUT')
+                        <div class="card-body">
+                            {{-- Nama Kriteria --}}
+                            <div class="mb-3">
+                                <label class="form-label required">Nama Kriteria</label>
+                                <input type="text" name="name"
+                                    class="form-control @error('name') is-invalid @enderror" value="{{ $criteria->name }}"
+                                    autofocus>
+                                @error('name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- Kode Kriteria --}}
+                            <div class="mb-3">
+                                <label class="form-label required">Kode Kriteria</label>
+                                <input type="text" name="code"
+                                    class="form-control @error('code') is-invalid @enderror"
+                                    placeholder="Contoh: C1, C2, C3" value="{{ (string) $criteria->code }}" required>
+                                @error('code')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- Atribut (Type) --}}
+                            <div class="mb-3">
+                                <label class="form-label required">Atribut</label>
+                                <select class="form-select @error('type') is-invalid @enderror" name="type" required>
+                                    <option value="benefit" {{ $criteria->type->value === 'benefit' ? 'selected' : '' }}>
+                                        Benefit
+                                    </option>
+                                    <option value="cost" {{ $criteria->type->value === 'cost' ? 'selected' : '' }}>
+                                        Cost
+                                    </option>
+                                </select>
+                                @error('type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- Bobot (Weight) --}}
+                            <div class="mb-3">
+                                <label class="form-label required">Bobot</label>
+                                <input type="number" step="0.01" min="0.01" max="1" name="weight"
+                                    class="form-control @error('weight') is-invalid @enderror" placeholder="Contoh: 0.25"
+                                    value="{{ $criteria->weight }}" required>
+                                @error('weight')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            {{-- Tipe Penilaian (Input Type) --}}
+                            <div class="mb-3">
+                                <label class="form-label required">Tipe Penilaian</label>
+                                <select class="form-select @error('input_type') is-invalid @enderror" name="input_type"
+                                    required>
+                                    <option value="range"
+                                        {{ $criteria->input_type->value === 'range' ? 'selected' : '' }}>
+                                        Rentang Nilai
+                                    </option>
+                                    <option value="categorical"
+                                        {{ $criteria->input_type->value === 'categorical' ? 'selected' : '' }}>
+                                        Kategorikal
+                                    </option>
+                                </select>
+                                @error('input_type')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent d-flex justify-content-between align-items-center">
+                            <a href="{{ route('admin.criterias.index') }}" class="btn btn-link link-secondary">
+                                Kembali
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                Simpan
+                            </button>
+                        </div>
+                    </form>
+                @endif
             </div>
         </div>
+
         <div class="col-12 col-lg-7">
             <div class="card shadow-sm">
                 <div class="card-header">
@@ -153,8 +216,8 @@
                                 </span>
 
                                 <div class="btn-list flex-nowrap">
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal"
-                                        data-bs-target="#modal-edit-subcriteria"
+                                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="modal" data-bs-target="#modal-edit-subcriteria"
                                         data-url="{{ route('admin.criterias.sub-criterias.update', $subCriteria->id) }}"
                                         data-description="{{ $subCriteria->description }}"
                                         data-crisp="{{ $subCriteria->crisp_value }}"
@@ -162,16 +225,20 @@
                                         data-max="{{ $subCriteria->max_value }}">
                                         Edit
                                     </button>
-                                    <form action="{{ route('admin.criterias.sub-criterias.destroy', $subCriteria->id) }}"
-                                        method="POST"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus sub-kriteria ini?');"
-                                        class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            Hapus
-                                        </button>
-                                    </form>
+
+                                    @if (!$criteria->is_system)
+                                        <form
+                                            action="{{ route('admin.criterias.sub-criterias.destroy', $subCriteria->id) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus sub-kriteria ini?');"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -188,6 +255,7 @@
     @include('admin.criterias.subcriteria.create')
     @include('admin.criterias.subcriteria.edit')
 @endsection
+
 @push('script')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -196,23 +264,18 @@
             if (editModal) {
                 editModal.addEventListener('show.bs.modal', function(event) {
                     const button = event.relatedTarget;
-
-                    // If the modal is programmetically opened due to a validation error, stop it from overwriting the old value
                     if (!button) return;
 
-                    // Extract data from button attributes
                     const url = button.getAttribute('data-url');
                     const description = button.getAttribute('data-description');
                     const crisp = button.getAttribute('data-crisp');
                     const min = button.getAttribute('data-min');
                     const max = button.getAttribute('data-max');
 
-                    // Set action forms and save them in hidden inputs as well
                     const form = document.getElementById('form-edit-subcriteria');
                     form.setAttribute('action', url);
                     document.getElementById('edit-form-url').value = url;
 
-                    // Fill in the input form value
                     document.getElementById('edit-description').value = description || '';
                     document.getElementById('edit-crisp').value = crisp || '';
 

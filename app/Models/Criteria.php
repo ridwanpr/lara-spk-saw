@@ -30,6 +30,7 @@ class Criteria extends Model
         'type',
         'weight',
         'input_type',
+        'is_system',
     ];
 
     /**

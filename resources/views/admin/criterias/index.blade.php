@@ -88,15 +88,17 @@
                                         Detail
                                     </a>
 
-                                    <form action="{{ route('admin.criterias.destroy', $criteria->id) }}" method="POST"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus kriteria ini?');"
-                                        class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">
-                                            Hapus
-                                        </button>
-                                    </form>
+                                    @if ($criteria->is_system == false)
+                                        <form action="{{ route('admin.criterias.destroy', $criteria->id) }}" method="POST"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus kriteria ini?');"
+                                            class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </td>
                         </tr>

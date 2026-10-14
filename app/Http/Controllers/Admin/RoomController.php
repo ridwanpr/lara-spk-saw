@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreRoomRequest;
 use App\Http\Requests\Admin\UpdateRoomRequest;
+use App\Models\Criteria;
 use App\Models\Room;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,6 +24,7 @@ class RoomController extends Controller
         $search = $request->string('search')->trim()->value();
 
         $rooms = Room::query()
+            ->with('subCriteria')
             ->withCount('assets')
             ->when($search !== '', function ($query) use ($search): void {
                 $query->where(function ($subQuery) use ($search): void {
@@ -44,7 +46,9 @@ class RoomController extends Controller
     {
         Gate::authorize('create', Room::class);
 
-        return view('admin.rooms.create');
+        $subCriterias = Criteria::where('code', 'C3')->first()?->subCriterias ?? collect();
+
+        return view('admin.rooms.create', compact('subCriterias'));
     }
 
     /**
@@ -68,7 +72,9 @@ class RoomController extends Controller
     {
         Gate::authorize('update', $room);
 
-        return view('admin.rooms.edit', compact('room'));
+        $subCriterias = Criteria::where('code', 'C3')->first()?->subCriterias ?? collect();
+
+        return view('admin.rooms.edit', compact('room', 'subCriterias'));
     }
 
     /**

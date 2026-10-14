@@ -139,6 +139,20 @@ describe('criteria list (index)', function (): void {
         $response->assertOk();
         $response->assertSee('Data kriteria tidak ditemukan.');
     });
+
+    test('criteria list does not show delete action for system criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+        $systemCriteria = Criteria::factory()->create(['code' => 'CSYS', 'is_system' => true]);
+        $customCriteria = Criteria::factory()->create(['code' => 'CCUST', 'is_system' => false]);
+
+        $response = $this->actingAs($admin)->get('/admin/criterias');
+
+        $response->assertOk();
+        $response->assertSee($systemCriteria->code);
+        $response->assertSee($customCriteria->code);
+        $response->assertSee('<form action="'.route('admin.criterias.destroy', $customCriteria->id).'" method="POST"', false);
+        $response->assertDontSee('<form action="'.route('admin.criterias.destroy', $systemCriteria->id).'" method="POST"', false);
+    });
 });
 
 describe('create criteria page', function (): void {
@@ -339,6 +353,22 @@ describe('show criteria', function (): void {
         $response = $this->actingAs($admin)->get('/admin/criterias/999999');
 
         $response->assertNotFound();
+    });
+
+    test('admin sees system criteria details with disabled inputs and system badge', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->benefit()->categorical()->create([
+            'code' => 'C1',
+            'name' => 'Tingkat Kerusakan Fisik',
+            'is_system' => true,
+        ]);
+
+        $response = $this->actingAs($admin)->get("/admin/criterias/{$criteria->id}");
+
+        $response->assertOk();
+        $response->assertSee('Kriteria Sistem');
+        $response->assertSee('disabled');
+        $response->assertDontSee('<form action="'.route('admin.criterias.update', $criteria->id).'" method="POST"', false);
     });
 });
 
