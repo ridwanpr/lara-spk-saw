@@ -35,4 +35,14 @@ class SubCriteriaController extends Controller
         return back()
             ->with('success', 'Data sub kriteria berhasil diubah');
     }
+
+    public function destroy(SubCriteria $subCriteria)
+    {
+        Gate::authorize('delete', $subCriteria);
+
+        $subCriteria->delete();
+
+        return back()
+            ->with('success', 'Data sub kriteria berhasil dihapus');
+    }
 }

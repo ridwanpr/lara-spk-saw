@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function (): void {
                         ->name('store');
                     Route::put('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'update'])
                         ->name('update');
+                    Route::delete('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'destroy'])
+                        ->name('destroy');
                 });
         });
 });

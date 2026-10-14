@@ -162,9 +162,16 @@
                                         data-max="{{ $subCriteria->max_value }}">
                                         Edit
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger">
-                                        Hapus
-                                    </button>
+                                    <form action="{{ route('admin.criterias.sub-criterias.destroy', $subCriteria->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus sub-kriteria ini?');"
+                                        class="d-inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            Hapus
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

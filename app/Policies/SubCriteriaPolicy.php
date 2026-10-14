@@ -22,4 +22,12 @@ class SubCriteriaPolicy
     {
         return $user->isAdmin();
     }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, SubCriteria $subCriteria): bool
+    {
+        return $user->isAdmin();
+    }
 }

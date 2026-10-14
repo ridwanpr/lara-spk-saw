@@ -31,6 +31,9 @@ describe('security and role protection for SubCriteria endpoints', function (): 
             'edit_description' => 'Sangat Baik',
             'edit_crisp_value' => 5,
         ])->assertRedirect('/login');
+
+        $this->delete("/admin/criterias/sub-criterias/{$subCriteria->id}")
+            ->assertRedirect('/login');
     });
 
     test('staff users are forbidden from all sub criteria endpoints', function (): void {
@@ -51,6 +54,9 @@ describe('security and role protection for SubCriteria endpoints', function (): 
             'edit_description' => 'Sangat Baik',
             'edit_crisp_value' => 5,
         ])->assertForbidden();
+
+        $this->actingAs($staff)->delete("/admin/criterias/sub-criterias/{$subCriteria->id}")
+            ->assertForbidden();
     });
 
     test('inspector users are forbidden from all sub criteria endpoints', function (): void {
@@ -71,6 +77,9 @@ describe('security and role protection for SubCriteria endpoints', function (): 
             'edit_description' => 'Sangat Baik',
             'edit_crisp_value' => 5,
         ])->assertForbidden();
+
+        $this->actingAs($inspector)->delete("/admin/criterias/sub-criterias/{$subCriteria->id}")
+            ->assertForbidden();
     });
 });
 
@@ -86,7 +95,8 @@ describe('sub criteria policy permissions', function (): void {
         $policy = new SubCriteriaPolicy;
 
         expect($policy->create($admin))->toBeTrue()
-            ->and($policy->update($admin, $subCriteria))->toBeTrue();
+            ->and($policy->update($admin, $subCriteria))->toBeTrue()
+            ->and($policy->delete($admin, $subCriteria))->toBeTrue();
     });
 
     test('staff is unauthorized for all sub criteria policy abilities', function (): void {
@@ -100,7 +110,8 @@ describe('sub criteria policy permissions', function (): void {
         $policy = new SubCriteriaPolicy;
 
         expect($policy->create($staff))->toBeFalse()
-            ->and($policy->update($staff, $subCriteria))->toBeFalse();
+            ->and($policy->update($staff, $subCriteria))->toBeFalse()
+            ->and($policy->delete($staff, $subCriteria))->toBeFalse();
     });
 
     test('inspector is unauthorized for all sub criteria policy abilities', function (): void {
@@ -114,7 +125,8 @@ describe('sub criteria policy permissions', function (): void {
         $policy = new SubCriteriaPolicy;
 
         expect($policy->create($inspector))->toBeFalse()
-            ->and($policy->update($inspector, $subCriteria))->toBeFalse();
+            ->and($policy->update($inspector, $subCriteria))->toBeFalse()
+            ->and($policy->delete($inspector, $subCriteria))->toBeFalse();
     });
 });
 
@@ -527,5 +539,60 @@ describe('update sub criteria', function (): void {
         $subCriteriaB->refresh();
         expect($subCriteriaB->description)->toBe('Sangat Baik B')
             ->and($subCriteriaB->crisp_value)->toBe(5);
+    });
+});
+
+describe('destroy sub criteria', function (): void {
+    test('admin can delete an existing sub criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Cukup',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->delete("/admin/criterias/sub-criterias/{$subCriteria->id}");
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHas('success', 'Data sub kriteria berhasil dihapus');
+        $this->assertModelMissing($subCriteria);
+        expect($criteria->subCriterias()->count())->toBe(0);
+    });
+
+    test('deleting a sub criteria does not delete sibling sub criterias or parent criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria1 = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ]);
+        $subCriteria2 = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Baik',
+            'crisp_value' => 4,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->delete("/admin/criterias/sub-criterias/{$subCriteria1->id}");
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $this->assertModelMissing($subCriteria1);
+        $this->assertModelExists($subCriteria2);
+        $this->assertModelExists($criteria);
+        expect($criteria->subCriterias()->count())->toBe(1);
+    });
+
+    test('returns 404 when deleting non-existent sub criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)
+            ->delete('/admin/criterias/sub-criterias/999999');
+
+        $response->assertNotFound();
     });
 });
