@@ -4,6 +4,7 @@ namespace App\Http\Requests\Admin;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSubCriteriaRequest extends FormRequest
 {
@@ -22,11 +23,21 @@ class StoreSubCriteriaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $criteriaId = $this->route('criteria')?->id;
+
         return [
             'description' => ['required', 'string', 'max:255'],
-            'crisp_value' => ['required', 'integer', 'min:1', 'max:5'],
-            'min_value' => ['numeric'],
-            'max_value' => ['numeric'],
+            'crisp_value' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:5',
+                Rule::unique('sub_criterias', 'crisp_value')->where(function ($query) use ($criteriaId) {
+                    return $query->where('criteria_id', $criteriaId);
+                }),
+            ],
+            'min_value' => ['nullable', 'numeric'],
+            'max_value' => ['nullable', 'numeric'],
         ];
     }
 

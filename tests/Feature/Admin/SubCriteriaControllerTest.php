@@ -250,6 +250,52 @@ describe('store sub criteria', function (): void {
         $response->assertNotFound();
         $this->assertDatabaseCount('sub_criterias', 0);
     });
+
+    test('validation fails when crisp_value is already used for the same criteria on store', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Cukup',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->post("/admin/criterias/{$criteria->id}/sub-criterias", [
+                'description' => 'Baik',
+                'crisp_value' => 3,
+            ]);
+
+        $response->assertSessionHasErrors(['crisp_value']);
+        $this->assertDatabaseCount('sub_criterias', 1);
+    });
+
+    test('admin can store sub criteria with the same crisp_value for a different criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteriaA = Criteria::factory()->create();
+        $criteriaB = Criteria::factory()->create();
+        SubCriteria::create([
+            'criteria_id' => $criteriaA->id,
+            'description' => 'Cukup Kriteria A',
+            'crisp_value' => 3,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteriaB->id}")
+            ->post("/admin/criterias/{$criteriaB->id}/sub-criterias", [
+                'description' => 'Cukup Kriteria B',
+                'crisp_value' => 3,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteriaB->id}");
+        $response->assertSessionHas('success', 'Data sub kriteria berhasil ditambahkan');
+        $this->assertDatabaseCount('sub_criterias', 2);
+        $this->assertDatabaseHas('sub_criterias', [
+            'criteria_id' => $criteriaB->id,
+            'description' => 'Cukup Kriteria B',
+            'crisp_value' => 3,
+        ]);
+    });
 });
 
 describe('update sub criteria', function (): void {
@@ -401,5 +447,85 @@ describe('update sub criteria', function (): void {
             ]);
 
         $response->assertNotFound();
+    });
+
+    test('validation fails when edit_crisp_value is already used by another sub criteria of the same criteria on update', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Sangat Baik',
+            'crisp_value' => 5,
+        ]);
+        $subCriteriaToUpdate = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Baik',
+            'crisp_value' => 4,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->put("/admin/criterias/sub-criterias/{$subCriteriaToUpdate->id}", [
+                'edit_description' => 'Baik Diubah',
+                'edit_crisp_value' => 5,
+            ]);
+
+        $response->assertSessionHasErrors(['edit_crisp_value']);
+        $subCriteriaToUpdate->refresh();
+        expect($subCriteriaToUpdate->crisp_value)->toBe(4)
+            ->and($subCriteriaToUpdate->description)->toBe('Baik');
+    });
+
+    test('admin can update sub criteria keeping its own crisp_value', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteria = Criteria::factory()->create();
+        $subCriteria = SubCriteria::create([
+            'criteria_id' => $criteria->id,
+            'description' => 'Baik',
+            'crisp_value' => 4,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteria->id}")
+            ->put("/admin/criterias/sub-criterias/{$subCriteria->id}", [
+                'edit_description' => 'Baik Sekali',
+                'edit_crisp_value' => 4,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteria->id}");
+        $response->assertSessionHas('success', 'Data sub kriteria berhasil diubah');
+
+        $subCriteria->refresh();
+        expect($subCriteria->description)->toBe('Baik Sekali')
+            ->and($subCriteria->crisp_value)->toBe(4);
+    });
+
+    test('admin can update sub criteria to use crisp_value that exists in another criteria', function (): void {
+        $admin = User::factory()->admin()->create();
+        $criteriaA = Criteria::factory()->create();
+        $criteriaB = Criteria::factory()->create();
+        SubCriteria::create([
+            'criteria_id' => $criteriaA->id,
+            'description' => 'Sangat Baik A',
+            'crisp_value' => 5,
+        ]);
+        $subCriteriaB = SubCriteria::create([
+            'criteria_id' => $criteriaB->id,
+            'description' => 'Baik B',
+            'crisp_value' => 4,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->from("/admin/criterias/{$criteriaB->id}")
+            ->put("/admin/criterias/sub-criterias/{$subCriteriaB->id}", [
+                'edit_description' => 'Sangat Baik B',
+                'edit_crisp_value' => 5,
+            ]);
+
+        $response->assertRedirect("/admin/criterias/{$criteriaB->id}");
+        $response->assertSessionHas('success', 'Data sub kriteria berhasil diubah');
+
+        $subCriteriaB->refresh();
+        expect($subCriteriaB->description)->toBe('Sangat Baik B')
+            ->and($subCriteriaB->crisp_value)->toBe(5);
     });
 });

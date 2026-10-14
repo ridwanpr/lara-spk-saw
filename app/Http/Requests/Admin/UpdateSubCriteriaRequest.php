@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\SubCriteria;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSubCriteriaRequest extends FormRequest
 {
@@ -22,19 +24,32 @@ class UpdateSubCriteriaRequest extends FormRequest
      */
     public function rules(): array
     {
+        /** @var SubCriteria|null $subCriteria */
+        $subCriteria = $this->route('subCriteria') ?? $this->route('sub_criterion');
+
         return [
             'edit_description' => ['required', 'string', 'max:255'],
-            'edit_crisp_value' => ['required', 'integer', 'min:1', 'max:5'],
-            'edit_min_value' => ['numeric'],
-            'edit_max_value' => ['numeric'],
+            'edit_crisp_value' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:5',
+                Rule::unique('sub_criterias', 'crisp_value')
+                    ->where(function ($query) use ($subCriteria) {
+                        return $query->where('criteria_id', $subCriteria?->criteria_id);
+                    })
+                    ->ignore($subCriteria?->id),
+            ],
+            'edit_min_value' => ['nullable', 'numeric'],
+            'edit_max_value' => ['nullable', 'numeric'],
         ];
     }
 
-    public function attributes()
+    public function attributes(): array
     {
         return [
             'edit_description' => 'Nama sub kriteria',
-            'edit_crisp_value' => 'Nilai crips',
+            'edit_crisp_value' => 'Nilai crisp',
             'edit_min_value' => 'Nilai minimum',
             'edit_max_value' => 'Nilai maksimum',
         ];
