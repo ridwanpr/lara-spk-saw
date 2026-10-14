@@ -23,4 +23,18 @@ enum TicketStatus: string
             self::Rejected => 'Ditolak',
         };
     }
+
+    /**
+     * Get the Tabler semantic color name.
+     */
+    public function color(): string
+    {
+        return match ($this) {
+            self::PendingVerification => 'warning',
+            self::Verified => 'info',
+            self::UnderRepair => 'primary',
+            self::Completed => 'success',
+            self::Rejected => 'danger',
+        };
+    }
 }

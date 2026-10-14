@@ -53,7 +53,7 @@
 
     $primaryNav[] = [
         'title' => 'Tiket Perbaikan',
-        'url' => '#',
+        'url' => route('admin.repair-tickets.index'),
         'icon' => $icons['clipboard-list'],
         'active' => false,
     ];

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TicketStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -84,5 +85,33 @@ class RepairTicket extends Model
     public function evaluations(): HasMany
     {
         return $this->hasMany(TicketEvaluation::class, 'ticket_id');
+    }
+
+    /**
+     * Scope a query to only include tickets visible to the given user.
+     *
+     * Staff users can only see their own tickets, while admin and inspector can see all tickets.
+     *
+     * @param  Builder<RepairTicket>  $query
+     * @return Builder<RepairTicket>
+     */
+    public function scopeVisibleTo(Builder $query, User $user): Builder
+    {
+        if ($user->isStaff()) {
+            return $query->where('reporter_id', $user->id);
+        }
+
+        return $query;
+    }
+
+    /**
+     * Scope a query to only include tickets visible to the given user (alias for visibleTo).
+     *
+     * @param  Builder<RepairTicket>  $query
+     * @return Builder<RepairTicket>
+     */
+    public function scopeForUser(Builder $query, User $user): Builder
+    {
+        return $this->scopeVisibleTo($query, $user);
     }
 }

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AssetCategoryController;
 use App\Http\Controllers\Admin\AssetController;
 use App\Http\Controllers\Admin\CriteriaController;
+use App\Http\Controllers\Admin\RepairTicketController;
 use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\SubCriteriaController;
 use App\Http\Controllers\Admin\UserController;
@@ -13,25 +14,33 @@ Route::middleware('auth')->group(function (): void {
         return view('welcome');
     })->name('dashboard');
 
-    Route::middleware('role:admin')
-        ->prefix('admin')
+    Route::prefix('admin')
         ->name('admin.')
         ->group(function (): void {
-            Route::resource('users', UserController::class)->except(['show']);
-            Route::resource('rooms', RoomController::class)->except(['show']);
-            Route::resource('asset-categories', AssetCategoryController::class)->except(['show']);
-            Route::resource('assets', AssetController::class)->except(['show']);
-            Route::resource('criterias', CriteriaController::class)->except(['edit']);
+            Route::middleware('role:admin')->group(function (): void {
+                Route::resource('users', UserController::class)->except(['show']);
+                Route::resource('rooms', RoomController::class)->except(['show']);
+                Route::resource('asset-categories', AssetCategoryController::class)->except(['show']);
+                Route::resource('assets', AssetController::class)->except(['show']);
+                Route::resource('criterias', CriteriaController::class)->except(['edit']);
 
-            Route::prefix('criterias')
-                ->name('criterias.sub-criterias.')
+                Route::prefix('criterias')
+                    ->name('criterias.sub-criterias.')
+                    ->group(function () {
+                        Route::post('{criteria}/sub-criterias', [SubCriteriaController::class, 'store'])
+                            ->name('store');
+                        Route::put('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'update'])
+                            ->name('update');
+                        Route::delete('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'destroy'])
+                            ->name('destroy');
+                    });
+            });
+
+            Route::middleware('role:admin,inspector,staff')
+                ->prefix('repair-tickets')
+                ->name('repair-tickets.')
                 ->group(function () {
-                    Route::post('{criteria}/sub-criterias', [SubCriteriaController::class, 'store'])
-                        ->name('store');
-                    Route::put('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'update'])
-                        ->name('update');
-                    Route::delete('sub-criterias/{subCriteria}', [SubCriteriaController::class, 'destroy'])
-                        ->name('destroy');
+                    Route::get('/', [RepairTicketController::class, 'index'])->name('index');
                 });
         });
 });

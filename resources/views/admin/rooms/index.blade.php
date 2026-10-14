@@ -89,7 +89,7 @@
                     @forelse ($rooms as $item)
                         <tr>
                             <td>
-                                <span class="badge bg-secondary-lt font-monospace">
+                                <span class="badge bg-secondary-lt">
                                     {{ $item->code }}
                                 </span>
                             </td>
