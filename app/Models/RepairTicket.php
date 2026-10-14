@@ -114,4 +114,28 @@ class RepairTicket extends Model
     {
         return $this->scopeVisibleTo($query, $user);
     }
+
+    /**
+     * Generate a unique sequential ticket number for the current month.
+     * Format: TKT-YYYYMM-0001
+     */
+    public static function generateTicketNumber(): string
+    {
+        $prefix = 'TKT-' . now()->format('Ym') . '-';
+
+        $latestTicket = self::where('ticket_number', 'like', $prefix . '%')
+            ->lockForUpdate()
+            ->orderByRaw('LENGTH(ticket_number) DESC')
+            ->orderByDesc('ticket_number')
+            ->first();
+
+        $sequence = 1;
+
+        if ($latestTicket) {
+            $lastSequence = (int) substr($latestTicket->ticket_number, strlen($prefix));
+            $sequence = $lastSequence + 1;
+        }
+
+        return $prefix . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
+    }
 }

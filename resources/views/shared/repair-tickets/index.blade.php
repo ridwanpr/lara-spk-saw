@@ -15,7 +15,7 @@
                 </div>
             </div>
             <div class="col-auto ms-auto d-print-none">
-                <a href="" class="btn btn-primary d-inline-flex align-items-center gap-1">
+                <a href="{{ route('repair-tickets.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"
                         aria-hidden="true" focusable="false">
@@ -51,7 +51,7 @@
         <div class="card-header">
             <h3 class="card-title">Daftar Tiket</h3>
             <div class="card-actions">
-                <form action="{{ route('admin.repair-tickets.index') }}" method="GET"
+                <form action="{{ route('repair-tickets.index') }}" method="GET"
                     class="d-flex gap-2 align-items-center flex-wrap">
                     {{-- Multi-field Search input --}}
                     <div class="input-icon">
@@ -81,7 +81,7 @@
                     <button type="submit" class="btn btn-sm btn-outline-secondary">Filter</button>
 
                     @if ($search !== '' || $status !== '')
-                        <a href="{{ route('admin.repair-tickets.index') }}" class="btn btn-sm btn-ghost-secondary">
+                        <a href="{{ route('repair-tickets.index') }}" class="btn btn-sm btn-ghost-secondary">
                             Reset
                         </a>
                     @endif

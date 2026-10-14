@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\TicketStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Shared\StoreRepairTicketRequest;
+use App\Models\Asset;
 use App\Models\RepairTicket;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RepairTicketController extends Controller
 {
@@ -45,6 +49,60 @@ class RepairTicketController extends Controller
 
         $statuses = TicketStatus::cases();
 
-        return view('admin.repair-tickets.index', compact('repairTickets', 'search', 'status', 'statuses'));
+        return view('shared.repair-tickets.index', compact('repairTickets', 'search', 'status', 'statuses'));
+    }
+
+    public function create()
+    {
+        $assets = Asset::select('id', 'code', 'name')
+            ->orderBy('code')->get();
+
+        return view('shared.repair-tickets.create', compact('assets'));
+    }
+
+    public function store(StoreRepairTicketRequest $request): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        $activeTicket = DB::transaction(function () use ($request, $validated) {
+            $isHaveActiveTicket = RepairTicket::where('asset_id', $validated['asset_id'])
+                ->whereIn('status', [
+                    TicketStatus::PendingVerification->value,
+                    TicketStatus::Verified->value,
+                    TicketStatus::UnderRepair->value,
+                ])
+                ->lockForUpdate()
+                ->first();
+
+            if ($isHaveActiveTicket) {
+                return $isHaveActiveTicket;
+            }
+
+            $photoPath = null;
+            if ($request->hasFile('damage_photo')) {
+                $photoPath = $request->file('damage_photo')->store('repair-tickets', 'public');
+            }
+
+            RepairTicket::create([
+                'ticket_number' => RepairTicket::generateTicketNumber(),
+                'asset_id' => $validated['asset_id'],
+                'damage_description' => $validated['damage_description'],
+                'damage_photo' => $photoPath,
+                'reporter_id' => auth()->id(),
+                'status' => TicketStatus::PendingVerification->value,
+            ]);
+
+            return null;
+        });
+
+        if ($activeTicket) {
+            return back()->with(
+                'error',
+                "Aset ini sudah memiliki tiket perbaikan aktif (#{$activeTicket->ticket_number}) dengan status '{$activeTicket->status->label()}'."
+            );
+        }
+
+        return redirect()->route('repair-tickets.index')
+            ->with('success', 'Tiket perbaikan berhasil dibuat');
     }
 }

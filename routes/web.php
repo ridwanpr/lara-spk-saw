@@ -35,12 +35,14 @@ Route::middleware('auth')->group(function (): void {
                             ->name('destroy');
                     });
             });
+        });
 
-            Route::middleware('role:admin,inspector,staff')
-                ->prefix('repair-tickets')
-                ->name('repair-tickets.')
-                ->group(function () {
-                    Route::get('/', [RepairTicketController::class, 'index'])->name('index');
-                });
+    Route::middleware('role:admin,inspector,staff')
+        ->prefix('repair-tickets')
+        ->name('repair-tickets.')
+        ->group(function () {
+            Route::get('/', [RepairTicketController::class, 'index'])->name('index');
+            Route::get('/create', [RepairTicketController::class, 'create'])->name('create');
+            Route::post('/', [RepairTicketController::class, 'store'])->name('store');
         });
 });
