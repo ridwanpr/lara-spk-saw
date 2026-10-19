@@ -27,10 +27,11 @@
         })();
     </script>
     <div class="page">
-        <x-header />
         <x-navbar />
 
         <div class="page-wrapper">
+            <x-header />
+
             <main class="page-body">
                 <div class="container-xl">
                     @yield('content')

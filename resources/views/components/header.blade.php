@@ -1,14 +1,6 @@
-<header class="navbar navbar-expand-md d-print-none">
+<header class="navbar navbar-expand-md d-none d-lg-flex d-print-none">
     <div class="container-xl">
-        <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu"
-            aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle primary navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <h1 class="navbar-brand navbar-brand-autodark pe-0 pe-md-3">
-            <a href="{{ url('/') }}">SIAset</a>
-        </h1>
-        <div class="navbar-nav flex-row order-md-last align-items-center">
+        <div class="navbar-nav flex-row order-md-last align-items-center ms-auto">
             <div class="d-none d-md-flex me-2">
                 <a href="?theme=dark" class="nav-link px-0 hide-theme-dark" title="Aktifkan mode gelap"
                     data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-theme-value="dark"
