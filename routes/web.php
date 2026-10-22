@@ -47,5 +47,8 @@ Route::middleware('auth')->group(function (): void {
             Route::get('/{ticketNumber}', [RepairTicketController::class, 'show'])->name('show');
 
             Route::post('/verify/{ticketId}', [RepairTicketController::class, 'verify'])->name('verify');
+            Route::post('/{ticketId}/start-repair', [RepairTicketController::class, 'startRepair'])->name('start-repair');
+            Route::post('/{ticketId}/complete-repair', [RepairTicketController::class, 'completeRepair'])->name('complete-repair');
+            Route::post('/{ticketId}/reject', [RepairTicketController::class, 'reject'])->name('reject');
         });
 });

@@ -148,7 +148,9 @@
 
                         @if ($repairTicket->completion_notes)
                             <div class="mt-3">
-                                <label class="form-label text-secondary small">Catatan</label>
+                                <label class="form-label text-secondary small">
+                                    {{ $repairTicket->status === \App\Enums\TicketStatus::Rejected ? 'Alasan Penolakan' : 'Catatan Perbaikan' }}
+                                </label>
                                 <div class="p-3 rounded border text-body">
                                     {!! nl2br(e($repairTicket->completion_notes)) !!}
                                 </div>
@@ -257,5 +259,14 @@
         </div>
     </div>
 
-    @include('shared.repair-tickets.evaluations.verify-ticket')
+    @if (!auth()->user()->isStaff())
+        @if ($repairTicket->status === \App\Enums\TicketStatus::PendingVerification)
+            @include('shared.repair-tickets.evaluations.verify-ticket')
+            @include('shared.repair-tickets.modals.reject')
+        @elseif ($repairTicket->status === \App\Enums\TicketStatus::Verified && auth()->user()->isAdmin())
+            @include('shared.repair-tickets.modals.start-repair')
+        @elseif ($repairTicket->status === \App\Enums\TicketStatus::UnderRepair)
+            @include('shared.repair-tickets.modals.complete-repair')
+        @endif
+    @endif
 @endsection

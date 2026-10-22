@@ -3,17 +3,24 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Actions\RepairTickets\CalculateSawPriorities;
+use App\Actions\RepairTickets\CompleteRepairTicket;
 use App\Actions\RepairTickets\CreateRepairTicket;
+use App\Actions\RepairTickets\RejectRepairTicket;
+use App\Actions\RepairTickets\StartRepairTicket;
 use App\Actions\RepairTickets\VerifyRepairTicket;
 use App\Enums\TicketStatus;
 use App\Exceptions\ActiveRepairTicketException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Shared\CompleteRepairTicketRequest;
+use App\Http\Requests\Shared\RejectRepairTicketRequest;
+use App\Http\Requests\Shared\StartRepairTicketRequest;
 use App\Http\Requests\Shared\StoreRepairTicketRequest;
 use App\Http\Requests\Shared\VerifyRepairTicketRequest;
 use App\Models\Asset;
 use App\Models\Criteria;
 use App\Models\RepairTicket;
 use App\Models\User;
+use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -138,5 +145,53 @@ class RepairTicketController extends Controller
         return redirect()
             ->route('repair-tickets.show', $repairTicket->ticket_number)
             ->with('success', 'Laporan tiket berhasil diverifikasi dan dievaluasi.');
+    }
+
+    public function startRepair(StartRepairTicketRequest $request, string|int $ticketId, StartRepairTicket $startRepairTicket): RedirectResponse
+    {
+        $repairTicket = RepairTicket::with('asset')->findOrFail($ticketId);
+
+        try {
+            $startRepairTicket->start($repairTicket);
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('repair-tickets.show', $repairTicket->ticket_number)
+            ->with('success', 'Proses perbaikan berhasil dimulai.');
+    }
+
+    public function completeRepair(CompleteRepairTicketRequest $request, string|int $ticketId, CompleteRepairTicket $completeRepairTicket): RedirectResponse
+    {
+        $repairTicket = RepairTicket::with('asset')->findOrFail($ticketId);
+
+        try {
+            $completeRepairTicket->complete($repairTicket, $request->validated());
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('repair-tickets.show', $repairTicket->ticket_number)
+            ->with('success', 'Perbaikan berhasil ditandai selesai.');
+    }
+
+    public function reject(RejectRepairTicketRequest $request, string|int $ticketId, RejectRepairTicket $rejectRepairTicket): RedirectResponse
+    {
+        $repairTicket = RepairTicket::with('asset')->findOrFail($ticketId);
+
+        /** @var User $rejector */
+        $rejector = $request->user();
+
+        try {
+            $rejectRepairTicket->reject($repairTicket, $rejector, $request->validated('rejection_reason'));
+        } catch (DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()
+            ->route('repair-tickets.show', $repairTicket->ticket_number)
+            ->with('success', 'Laporan tiket berhasil ditolak.');
     }
 }

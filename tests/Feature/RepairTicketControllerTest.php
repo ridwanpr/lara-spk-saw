@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AssetCondition;
 use App\Enums\TicketStatus;
 use App\Models\Asset;
 use App\Models\Criteria;
@@ -1157,5 +1158,286 @@ describe('SAW priority calculation and verified tickets ordering', function (): 
         expect($priorities[$ticketOld->id]['rank'])->toBe(1)
             ->and($priorities[$ticketNew->id]['rank'])->toBe(2)
             ->and($priorities[$ticketOld->id]['score'])->toBe($priorities[$ticketNew->id]['score']);
+    });
+});
+
+describe('security and role access for Repair Tickets startRepair endpoint', function (): void {
+    test('unauthenticated guests cannot start repair and are redirected to login', function (): void {
+        $ticket = RepairTicket::factory()->verified()->create();
+
+        $this->post(route('repair-tickets.start-repair', $ticket->id))
+            ->assertRedirect(route('login'));
+    });
+
+    test('admin can start repair on verified ticket and syncs asset condition to under_repair', function (): void {
+        $admin = User::factory()->admin()->create();
+        $asset = Asset::factory()->create(['condition' => AssetCondition::Damaged]);
+        $ticket = RepairTicket::factory()->verified()->create(['asset_id' => $asset->id]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.start-repair', $ticket->id));
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success', 'Proses perbaikan berhasil dimulai.');
+
+        expect($ticket->fresh()->status)->toBe(TicketStatus::UnderRepair)
+            ->and($asset->fresh()->condition)->toBe(AssetCondition::UnderRepair);
+    });
+
+    test('inspector is forbidden from starting repair', function (): void {
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->verified()->create();
+
+        $this->actingAs($inspector)
+            ->post(route('repair-tickets.start-repair', $ticket->id))
+            ->assertForbidden();
+    });
+
+    test('staff is forbidden from starting repair', function (): void {
+        $staff = User::factory()->staff()->create();
+        $ticket = RepairTicket::factory()->verified()->create(['reporter_id' => $staff->id]);
+
+        $this->actingAs($staff)
+            ->post(route('repair-tickets.start-repair', $ticket->id))
+            ->assertForbidden();
+    });
+
+    test('cannot start repair on ticket that is not verified', function (): void {
+        $admin = User::factory()->admin()->create();
+        $pendingTicket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($admin)
+            ->from(route('repair-tickets.show', $pendingTicket->ticket_number))
+            ->post(route('repair-tickets.start-repair', $pendingTicket->id));
+
+        $response->assertRedirect(route('repair-tickets.show', $pendingTicket->ticket_number))
+            ->assertSessionHas('error');
+
+        expect($pendingTicket->fresh()->status)->toBe(TicketStatus::PendingVerification);
+    });
+});
+
+describe('security and role access for Repair Tickets completeRepair endpoint', function (): void {
+    test('unauthenticated guests cannot complete repair and are redirected to login', function (): void {
+        $ticket = RepairTicket::factory()->underRepair()->create();
+
+        $this->post(route('repair-tickets.complete-repair', $ticket->id), [
+            'actual_cost' => 200000,
+        ])->assertRedirect(route('login'));
+    });
+
+    test('admin can complete repair and syncs asset condition to good', function (): void {
+        $admin = User::factory()->admin()->create();
+        $asset = Asset::factory()->create(['condition' => AssetCondition::UnderRepair]);
+        $ticket = RepairTicket::factory()->underRepair()->create(['asset_id' => $asset->id]);
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.complete-repair', $ticket->id), [
+                'actual_cost' => 320000,
+                'completion_notes' => 'Penggantian kabel fleksibel dan pembersihan debu pendingin.',
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success', 'Perbaikan berhasil ditandai selesai.');
+
+        $freshTicket = $ticket->fresh();
+        expect($freshTicket->status)->toBe(TicketStatus::Completed)
+            ->and((float) $freshTicket->actual_cost)->toBe(320000.0)
+            ->and($freshTicket->completion_notes)->toBe('Penggantian kabel fleksibel dan pembersihan debu pendingin.')
+            ->and($asset->fresh()->condition)->toBe(AssetCondition::Good);
+    });
+
+    test('inspector can complete repair', function (): void {
+        $inspector = User::factory()->inspector()->create();
+        $asset = Asset::factory()->create(['condition' => AssetCondition::UnderRepair]);
+        $ticket = RepairTicket::factory()->underRepair()->create(['asset_id' => $asset->id]);
+
+        $response = $this->actingAs($inspector)
+            ->post(route('repair-tickets.complete-repair', $ticket->id), [
+                'actual_cost' => 150000,
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success');
+
+        expect($ticket->fresh()->status)->toBe(TicketStatus::Completed)
+            ->and($asset->fresh()->condition)->toBe(AssetCondition::Good);
+    });
+
+    test('staff is forbidden from completing repair', function (): void {
+        $staff = User::factory()->staff()->create();
+        $ticket = RepairTicket::factory()->underRepair()->create(['reporter_id' => $staff->id]);
+
+        $this->actingAs($staff)
+            ->post(route('repair-tickets.complete-repair', $ticket->id), [
+                'actual_cost' => 100000,
+            ])
+            ->assertForbidden();
+    });
+
+    test('validates actual_cost is required, numeric, and non-negative', function (mixed $invalidCost): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->underRepair()->create();
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.complete-repair', $ticket->id), [
+                'actual_cost' => $invalidCost,
+            ]);
+
+        $response->assertSessionHasErrors(['actual_cost']);
+    })->with([
+        'missing' => [null],
+        'negative' => [-1000],
+        'non-numeric' => ['tidak-valid'],
+    ]);
+
+    test('cannot complete repair on ticket that is not under_repair', function (): void {
+        $admin = User::factory()->admin()->create();
+        $verifiedTicket = RepairTicket::factory()->verified()->create();
+
+        $response = $this->actingAs($admin)
+            ->from(route('repair-tickets.show', $verifiedTicket->ticket_number))
+            ->post(route('repair-tickets.complete-repair', $verifiedTicket->id), [
+                'actual_cost' => 100000,
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $verifiedTicket->ticket_number))
+            ->assertSessionHas('error');
+
+        expect($verifiedTicket->fresh()->status)->toBe(TicketStatus::Verified);
+    });
+});
+
+describe('security and role access for Repair Tickets reject endpoint', function (): void {
+    test('unauthenticated guests cannot reject a ticket and are redirected to login', function (): void {
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $this->post(route('repair-tickets.reject', $ticket->id), [
+            'rejection_reason' => 'Bukan kerusakan fisik.',
+        ])->assertRedirect(route('login'));
+    });
+
+    test('admin can reject pending ticket with reason', function (): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.reject', $ticket->id), [
+                'rejection_reason' => 'Aset hanya butuh restart kabel daya, bukan perbaikan teknis.',
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success', 'Laporan tiket berhasil ditolak.');
+
+        $fresh = $ticket->fresh();
+        expect($fresh->status)->toBe(TicketStatus::Rejected)
+            ->and($fresh->verifier_id)->toBe($admin->id)
+            ->and($fresh->verified_at)->not->toBeNull()
+            ->and($fresh->completion_notes)->toBe('Aset hanya butuh restart kabel daya, bukan perbaikan teknis.');
+    });
+
+    test('inspector can reject pending ticket', function (): void {
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($inspector)
+            ->post(route('repair-tickets.reject', $ticket->id), [
+                'rejection_reason' => 'Kerusakan akibat kelalaian operasional tidak ditanggung.',
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $ticket->ticket_number))
+            ->assertSessionHas('success');
+
+        expect($ticket->fresh()->status)->toBe(TicketStatus::Rejected);
+    });
+
+    test('staff is forbidden from rejecting ticket', function (): void {
+        $staff = User::factory()->staff()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $this->actingAs($staff)
+            ->post(route('repair-tickets.reject', $ticket->id), [
+                'rejection_reason' => 'Mencoba menolak tiket sendiri.',
+            ])
+            ->assertForbidden();
+    });
+
+    test('validates rejection_reason is required', function (): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($admin)
+            ->post(route('repair-tickets.reject', $ticket->id), [
+                'rejection_reason' => '',
+            ]);
+
+        $response->assertSessionHasErrors(['rejection_reason']);
+    });
+
+    test('cannot reject ticket that is already verified, under_repair, or completed', function (): void {
+        $admin = User::factory()->admin()->create();
+        $verifiedTicket = RepairTicket::factory()->verified()->create();
+
+        $response = $this->actingAs($admin)
+            ->from(route('repair-tickets.show', $verifiedTicket->ticket_number))
+            ->post(route('repair-tickets.reject', $verifiedTicket->id), [
+                'rejection_reason' => 'Coba tolak yang sudah diverifikasi.',
+            ]);
+
+        $response->assertRedirect(route('repair-tickets.show', $verifiedTicket->ticket_number))
+            ->assertSessionHas('error');
+
+        expect($verifiedTicket->fresh()->status)->toBe(TicketStatus::Verified);
+    });
+});
+
+describe('repair ticket action modals rendering on show page', function (): void {
+    test('renders reject modal and verify modal for pending ticket to admin and inspector', function (): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->pendingVerification()->create();
+
+        $response = $this->actingAs($admin)->get(route('repair-tickets.show', $ticket->ticket_number));
+
+        $response->assertOk();
+        $response->assertSee('id="verify-ticket-modal"', false);
+        $response->assertSee('id="reject-ticket-modal"', false);
+        $response->assertSee(route('repair-tickets.reject', $ticket->id));
+    });
+
+    test('renders start repair modal for verified ticket only to admin', function (): void {
+        $admin = User::factory()->admin()->create();
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->verified()->create();
+
+        $adminResponse = $this->actingAs($admin)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $adminResponse->assertSee('id="start-repair-modal"', false);
+        $adminResponse->assertSee(route('repair-tickets.start-repair', $ticket->id));
+
+        $inspectorResponse = $this->actingAs($inspector)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $inspectorResponse->assertDontSee('id="start-repair-modal"', false);
+    });
+
+    test('renders complete repair modal for under_repair ticket to admin and inspector', function (): void {
+        $admin = User::factory()->admin()->create();
+        $inspector = User::factory()->inspector()->create();
+        $ticket = RepairTicket::factory()->underRepair()->create();
+
+        $adminResponse = $this->actingAs($admin)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $adminResponse->assertSee('id="complete-repair-modal"', false);
+        $adminResponse->assertSee(route('repair-tickets.complete-repair', $ticket->id));
+
+        $inspectorResponse = $this->actingAs($inspector)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $inspectorResponse->assertSee('id="complete-repair-modal"', false);
+    });
+
+    test('renders rejection reason on show page when ticket is rejected', function (): void {
+        $admin = User::factory()->admin()->create();
+        $ticket = RepairTicket::factory()->rejected()->create([
+            'completion_notes' => 'Alasan: Kerusakan di luar klausul pemeliharaan.',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('repair-tickets.show', $ticket->ticket_number));
+        $response->assertSee('Alasan Penolakan');
+        $response->assertSee('Alasan: Kerusakan di luar klausul pemeliharaan.');
     });
 });
