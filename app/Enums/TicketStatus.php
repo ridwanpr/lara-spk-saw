@@ -30,9 +30,9 @@ enum TicketStatus: string
     public function color(): string
     {
         return match ($this) {
-            self::PendingVerification => 'warning',
+            self::PendingVerification => 'secondary',
             self::Verified => 'info',
-            self::UnderRepair => 'primary',
+            self::UnderRepair => 'warning',
             self::Completed => 'success',
             self::Rejected => 'danger',
         };
