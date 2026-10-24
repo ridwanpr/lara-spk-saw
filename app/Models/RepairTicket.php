@@ -121,9 +121,9 @@ class RepairTicket extends Model
      */
     public static function generateTicketNumber(): string
     {
-        $prefix = 'TKT-' . now()->format('Ym') . '-';
+        $prefix = 'TKT-'.now()->format('Ym').'-';
 
-        $latestTicket = self::where('ticket_number', 'like', $prefix . '%')
+        $latestTicket = self::where('ticket_number', 'like', $prefix.'%')
             ->lockForUpdate()
             ->orderByRaw('LENGTH(ticket_number) DESC')
             ->orderByDesc('ticket_number')
@@ -136,6 +136,6 @@ class RepairTicket extends Model
             $sequence = $lastSequence + 1;
         }
 
-        return $prefix . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 }

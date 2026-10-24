@@ -42,6 +42,7 @@ Route::middleware('auth')->group(function (): void {
         ->name('repair-tickets.')
         ->group(function () {
             Route::get('/', [RepairTicketController::class, 'index'])->name('index');
+            Route::get('/export', [RepairTicketController::class, 'export'])->name('export');
             Route::get('/create', [RepairTicketController::class, 'create'])->name('create');
             Route::post('/', [RepairTicketController::class, 'store'])->name('store');
             Route::get('/{ticketNumber}', [RepairTicketController::class, 'show'])->name('show');

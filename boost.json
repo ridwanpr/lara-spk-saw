@@ -13,7 +13,6 @@
         "deploying-to-cloud",
         "fortify-development",
         "laravel-best-practices",
-        "testing-best-practices",
-        "tailwindcss-development"
+        "testing-best-practices"
     ]
 }

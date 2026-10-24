@@ -18,4 +18,3 @@ class ActiveRepairTicketException extends Exception
         parent::__construct($resolvedMessage, $code, $previous);
     }
 }
-

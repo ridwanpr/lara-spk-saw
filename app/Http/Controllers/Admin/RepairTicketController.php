@@ -10,8 +10,10 @@ use App\Actions\RepairTickets\StartRepairTicket;
 use App\Actions\RepairTickets\VerifyRepairTicket;
 use App\Enums\TicketStatus;
 use App\Exceptions\ActiveRepairTicketException;
+use App\Exports\RepairTicketsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Shared\CompleteRepairTicketRequest;
+use App\Http\Requests\Shared\ExportRepairTicketsRequest;
 use App\Http\Requests\Shared\RejectRepairTicketRequest;
 use App\Http\Requests\Shared\StartRepairTicketRequest;
 use App\Http\Requests\Shared\StoreRepairTicketRequest;
@@ -20,11 +22,15 @@ use App\Models\Asset;
 use App\Models\Criteria;
 use App\Models\RepairTicket;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use DomainException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class RepairTicketController extends Controller
 {
@@ -80,6 +86,70 @@ class RepairTicketController extends Controller
         $statuses = TicketStatus::cases();
 
         return view('shared.repair-tickets.index', compact('repairTickets', 'search', 'status', 'statuses', 'priorities'));
+    }
+
+    public function export(ExportRepairTicketsRequest $request, CalculateSawPriorities $calculateSawPriorities): BinaryFileResponse|Response
+    {
+        $validated = $request->validated();
+        $format = $validated['format'];
+        $status = $validated['status'] ?? null;
+        $startDate = $validated['start_date'] ?? null;
+        $endDate = $validated['end_date'] ?? null;
+        $sortBy = $validated['sort_by'] ?? 'latest';
+
+        $user = $request->user();
+        $selectedStatus = $status !== null ? TicketStatus::tryFrom($status) : null;
+        $priorities = $calculateSawPriorities->calculate();
+
+        $query = RepairTicket::with(['asset', 'reporter', 'verifier'])
+            ->when($user instanceof User, function ($query) use ($user): void {
+                $query->visibleTo($user);
+            })
+            ->when($selectedStatus !== null, function ($query) use ($selectedStatus): void {
+                $query->where('status', $selectedStatus->value);
+            })
+            ->when($startDate !== null, function ($query) use ($startDate): void {
+                $query->whereDate('created_at', '>=', $startDate);
+            })
+            ->when($endDate !== null, function ($query) use ($endDate): void {
+                $query->whereDate('created_at', '<=', $endDate);
+            });
+
+        if ($sortBy === 'priority') {
+            $tickets = $query->get()->sortBy(function (RepairTicket $ticket) use ($priorities) {
+                return $priorities[$ticket->id]['rank'] ?? 999999;
+            })->values();
+        } else {
+            $tickets = $query->latest()->get();
+        }
+
+        // Attach calculated SAW rank & score to ticket models
+        $tickets->each(function (RepairTicket $ticket) use ($priorities): void {
+            $ticket->saw_rank = $priorities[$ticket->id]['rank'] ?? null;
+            $ticket->saw_score = $priorities[$ticket->id]['score'] ?? null;
+        });
+
+        $timestamp = now()->format('Ymd_His');
+
+        if ($format === 'excel') {
+            $fileName = "laporan_tiket_perbaikan_{$timestamp}.xlsx";
+
+            return Excel::download(new RepairTicketsExport($tickets), $fileName);
+        }
+
+        $filters = [
+            'status_label' => $selectedStatus?->label() ?? 'Semua Status',
+            'sort_label' => $sortBy === 'priority' ? 'Prioritas SAW (Skor Tertinggi)' : 'Tanggal Terbaru',
+            'date_range' => ($startDate && $endDate)
+                ? "{$startDate} s/d {$endDate}"
+                : ($startDate ? "Mulai {$startDate}" : ($endDate ? "Hingga {$endDate}" : 'Semua Tanggal')),
+        ];
+
+        $fileName = "laporan_tiket_perbaikan_{$timestamp}.pdf";
+        $pdf = Pdf::loadView('shared.repair-tickets.exports.pdf', compact('tickets', 'filters'))
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download($fileName);
     }
 
     public function create(): View

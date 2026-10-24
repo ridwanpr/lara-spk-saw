@@ -100,4 +100,3 @@ class CalculateSawPriorities
         return $ranked;
     }
 }
-

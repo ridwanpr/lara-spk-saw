@@ -103,4 +103,3 @@ class VerifyRepairTicket
         return $repairTicket->refresh();
     }
 }
-

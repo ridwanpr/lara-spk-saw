@@ -14,7 +14,19 @@
                     Review dan proses tiket laporan perbaikan.
                 </div>
             </div>
-            <div class="col-auto ms-auto d-print-none">
+            <div class="col-auto ms-auto d-print-none d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#modal-export-tickets">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"
+                        aria-hidden="true" focusable="false">
+                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                        <path d="M7 11l5 5l5 -5" />
+                        <path d="M12 4l0 12" />
+                    </svg>
+                    Export
+                </button>
                 <a href="{{ route('repair-tickets.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-1">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"
@@ -181,5 +193,103 @@
                 </div>
             </div>
         @endif
+    </div>
+
+    {{-- Modal Export Tickets --}}
+    <div class="modal modal-blur fade" id="modal-export-tickets" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form action="{{ route('repair-tickets.export') }}" method="GET">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Export Laporan Tiket Perbaikan</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label required">Format File</label>
+                            <div class="form-selectgroup form-selectgroup-boxes d-flex flex-row">
+                                <label class="form-selectgroup-item flex-fill">
+                                    <input type="radio" name="format" value="excel" class="form-selectgroup-input" checked>
+                                    <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                        <span class="me-3">
+                                            <span class="form-selectgroup-check"></span>
+                                        </span>
+                                        <span class="form-selectgroup-label-content">
+                                            <span class="font-weight-medium">Excel</span>
+                                        </span>
+                                    </span>
+                                </label>
+                                <label class="form-selectgroup-item flex-fill">
+                                    <input type="radio" name="format" value="pdf" class="form-selectgroup-input">
+                                    <span class="form-selectgroup-label d-flex align-items-center p-3">
+                                        <span class="me-3">
+                                            <span class="form-selectgroup-check"></span>
+                                        </span>
+                                        <span class="form-selectgroup-label-content">
+                                            <span class="font-weight-medium">PDF</span>
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="export-status">Status Tiket</label>
+                            <select name="status" id="export-status" class="form-select">
+                                <option value="">Semua Status</option>
+                                @foreach ($statuses as $item)
+                                    <option value="{{ $item->value }}" @selected($status === $item->value)>
+                                        {{ $item->label() }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-6">
+                                <label class="form-label" for="export-start-date">Tanggal Mulai</label>
+                                <input type="date" name="start_date" id="export-start-date" class="form-control">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label" for="export-end-date">Tanggal Selesai</label>
+                                <input type="date" name="end_date" id="export-end-date" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Urutan Data</label>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" type="radio" name="sort_by" id="sort-latest" value="latest" checked>
+                                <label class="form-check-label" for="sort-latest">
+                                    Tanggal Terbaru (Waktu pelaporan terkini)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="sort_by" id="sort-priority" value="priority">
+                                <label class="form-check-label" for="sort-priority">
+                                    Prioritas SAW (Skor tertinggi / Ranking teratas)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-primary ms-auto d-inline-flex align-items-center gap-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon"
+                                aria-hidden="true" focusable="false">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2" />
+                                <path d="M7 11l5 5l5 -5" />
+                                <path d="M12 4l0 12" />
+                            </svg>
+                            Unduh Laporan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 @endsection
