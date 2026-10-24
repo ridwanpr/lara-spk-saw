@@ -154,8 +154,9 @@ class RepairTicketController extends Controller
 
     public function create(): View
     {
-        $assets = Asset::select('id', 'code', 'name')
-            ->orderBy('code')->get();
+        $assets = Asset::with(['activeRepairTicket'])
+            ->orderBy('code')
+            ->get();
 
         return view('shared.repair-tickets.create', compact('assets'));
     }

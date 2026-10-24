@@ -3,10 +3,12 @@
 namespace App\Models;
 
 use App\Enums\AssetCondition;
+use App\Enums\TicketStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Asset extends Model
 {
@@ -67,5 +69,21 @@ class Asset extends Model
     public function repairTickets(): HasMany
     {
         return $this->hasMany(RepairTicket::class, 'asset_id');
+    }
+
+    /**
+     * Get the active repair ticket for this asset.
+     *
+     * @return HasOne<RepairTicket, $this>
+     */
+    public function activeRepairTicket(): HasOne
+    {
+        return $this->hasOne(RepairTicket::class, 'asset_id')
+            ->whereIn('status', [
+                TicketStatus::PendingVerification,
+                TicketStatus::Verified,
+                TicketStatus::UnderRepair,
+            ])
+            ->latestOfMany();
     }
 }

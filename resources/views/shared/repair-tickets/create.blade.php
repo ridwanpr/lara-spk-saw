@@ -39,9 +39,15 @@
                             <select class="form-select @error('asset_id') is-invalid @enderror" name="asset_id" required>
                                 <option value="">Pilih aset...</option>
                                 @forelse ($assets as $asset)
-                                    <option value="{{ $asset->id }}" @selected(old('asset_id') == $asset->id)>
-                                        {{ $asset->name }}
-                                    </option>
+                                    @if ($asset->activeRepairTicket)
+                                        <option value="{{ $asset->id }}" disabled>
+                                            {{ $asset->name }} ({{ $asset->code }}) — [Laporan Aktif: #{{ $asset->activeRepairTicket->ticket_number }} - {{ $asset->activeRepairTicket->status->label() }}]
+                                        </option>
+                                    @else
+                                        <option value="{{ $asset->id }}" @selected(old('asset_id') == $asset->id)>
+                                            {{ $asset->name }} ({{ $asset->code }})
+                                        </option>
+                                    @endif
                                 @empty
                                     <option value="">Data aset tidak ditemukan</option>
                                 @endforelse

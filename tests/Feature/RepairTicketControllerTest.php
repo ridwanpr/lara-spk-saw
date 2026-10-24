@@ -85,6 +85,56 @@ describe('security and role access for Repair Tickets create endpoint', function
             ->assertOk()
             ->assertViewIs('shared.repair-tickets.create');
     });
+
+    test('disables asset options and displays active ticket info for pending, verified, or under repair tickets', function (): void {
+        $staff = User::factory()->staff()->create();
+
+        $assetPending = Asset::factory()->create(['name' => 'Laptop Pending', 'code' => 'AST-PND']);
+        $ticketPending = RepairTicket::factory()->pendingVerification()->create(['asset_id' => $assetPending->id]);
+
+        $assetVerified = Asset::factory()->create(['name' => 'Proyektor Verified', 'code' => 'AST-VRF']);
+        $ticketVerified = RepairTicket::factory()->verified()->create(['asset_id' => $assetVerified->id]);
+
+        $assetRepair = Asset::factory()->create(['name' => 'Printer Repair', 'code' => 'AST-RPR']);
+        $ticketRepair = RepairTicket::factory()->underRepair()->create(['asset_id' => $assetRepair->id]);
+
+        $response = $this->actingAs($staff)
+            ->get(route('repair-tickets.create'));
+
+        $response->assertOk();
+
+        $response->assertSeeHtml('<option value="'.$assetPending->id.'" disabled>');
+        $response->assertSeeText("[Laporan Aktif: #{$ticketPending->ticket_number} - {$ticketPending->status->label()}]");
+
+        $response->assertSeeHtml('<option value="'.$assetVerified->id.'" disabled>');
+        $response->assertSeeText("[Laporan Aktif: #{$ticketVerified->ticket_number} - {$ticketVerified->status->label()}]");
+
+        $response->assertSeeHtml('<option value="'.$assetRepair->id.'" disabled>');
+        $response->assertSeeText("[Laporan Aktif: #{$ticketRepair->ticket_number} - {$ticketRepair->status->label()}]");
+    });
+
+    test('allows selecting assets that only have completed or rejected tickets', function (): void {
+        $staff = User::factory()->staff()->create();
+
+        $assetCompleted = Asset::factory()->create(['name' => 'AC Completed', 'code' => 'AST-CMP']);
+        RepairTicket::factory()->completed()->create(['asset_id' => $assetCompleted->id]);
+
+        $assetRejected = Asset::factory()->create(['name' => 'Kursi Rejected', 'code' => 'AST-REJ']);
+        RepairTicket::factory()->rejected()->create(['asset_id' => $assetRejected->id]);
+
+        $response = $this->actingAs($staff)
+            ->get(route('repair-tickets.create'));
+
+        $response->assertOk();
+
+        $response->assertDontSeeHtml('<option value="'.$assetCompleted->id.'" disabled>');
+        $response->assertSeeText("{$assetCompleted->name} ({$assetCompleted->code})");
+
+        $response->assertDontSeeHtml('<option value="'.$assetRejected->id.'" disabled>');
+        $response->assertSeeText("{$assetRejected->name} ({$assetRejected->code})");
+
+        $response->assertDontSeeText('[Laporan Aktif:');
+    });
 });
 
 describe('role-based ticket visibility and scoping', function (): void {
