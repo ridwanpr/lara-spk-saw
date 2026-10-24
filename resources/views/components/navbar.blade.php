@@ -74,9 +74,9 @@
         ],
         [
             'title' => 'Dokumentasi',
-            'url' => '#',
+            'url' => route('documentation'),
             'icon' => $icons['file-type-doc'],
-            'active' => false,
+            'active' => request()->routeIs('documentation'),
         ],
     ];
 @endphp

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RepairTicketController;
 use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\SubCriteriaController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\DocumentationController;
 use App\Models\Asset;
 use App\Models\Criteria;
 use App\Models\RepairTicket;
@@ -43,6 +44,8 @@ Route::middleware('auth')->group(function (): void {
 
         return view('welcome', compact('stats', 'topPriorities', 'priorities', 'criterias'));
     })->name('dashboard');
+
+    Route::get('/documentation', DocumentationController::class)->name('documentation');
 
     Route::prefix('admin')
         ->name('admin.')
