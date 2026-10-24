@@ -28,12 +28,17 @@
 
             @auth
                 <div class="nav-item dropdown">
-                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0 px-2 dropdown-toggle"
+                    <a href="#" class="nav-link d-flex align-items-center lh-1 text-reset p-0 px-2 dropdown-toggle"
                         data-bs-toggle="dropdown">
-                        <div class="ps-2">
-                            <div>{{ auth()->user()->name }}</div>
-                            <div class="mt-1 small text-secondary">
-                                {{ auth()->user()->role?->name instanceof \App\Enums\RoleName ? auth()->user()->role->name->label() : auth()->user()->role?->name ?? 'Pengguna' }}
+                        <span class="avatar avatar-sm bg-primary-lt text-primary fw-bold rounded-circle">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                        </span>
+                        <div class="ps-2 text-start">
+                            <div class="fw-medium text-body">{{ auth()->user()->name }}</div>
+                            <div class="mt-1 small">
+                                <span class="badge bg-secondary-lt font-monospace" style="font-size: 0.65rem;">
+                                    {{ auth()->user()->role?->name instanceof \App\Enums\RoleName ? auth()->user()->role->name->label() : auth()->user()->role?->name ?? 'Pengguna' }}
+                                </span>
                             </div>
                         </div>
                     </a>

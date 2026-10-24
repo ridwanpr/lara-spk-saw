@@ -179,14 +179,22 @@
                     @if ($ticketPriority)
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="text-secondary">Rekomendasi Antrean</span>
-                            <span class="text-body fw-medium">
-                                #{{ $ticketPriority['rank'] }} dari {{ $ticketPriority['total'] }} tiket
+                            <span>
+                                @if ($ticketPriority['rank'] === 1)
+                                    <span class="badge badge-priority-top text-white">
+                                        #1 Prioritas Utama
+                                    </span>
+                                @else
+                                    <span class="badge badge-priority">
+                                        #{{ $ticketPriority['rank'] }} dari {{ $ticketPriority['total'] }} tiket
+                                    </span>
+                                @endif
                             </span>
                         </div>
                         <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-secondary">Skor Evaluasi</span>
-                            <span class="text-body font-monospace">
-                                {{ number_format($ticketPriority['score'], 2) }}
+                            <span class="text-secondary">Skor Evaluasi (V)</span>
+                            <span class="text-body font-monospace fw-medium">
+                                {{ number_format($ticketPriority['score'], 4) }}
                             </span>
                         </div>
                     @endif

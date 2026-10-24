@@ -1,9 +1,135 @@
 @import "@tabler/core/dist/css/tabler.min.css";
 
+/* -------------------------------------------------------------------------- */
+/* Theme Color Tokens & Refinements                                           */
+/* -------------------------------------------------------------------------- */
+:root {
+    --tblr-primary: #4f46e5;
+    --tblr-primary-rgb: 79, 70, 229;
+    --tblr-primary-fg: #ffffff;
+    --tblr-body-bg: #f8fafc;
+    --tblr-border-color: rgba(148, 163, 184, 0.22);
+}
+
+[data-bs-theme="dark"] {
+    --tblr-primary: #6366f1;
+    --tblr-primary-rgb: 99, 102, 241;
+    --tblr-primary-fg: #ffffff;
+    --tblr-body-bg: #0b0f19;
+    --tblr-bg-surface: #111827;
+    --tblr-bg-surface-secondary: #1f2937;
+    --tblr-border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Global Structure & Cards                                                   */
+/* -------------------------------------------------------------------------- */
 .input-icon-addon {
     height: 100%;
 }
 
 [data-bs-theme="dark"] img.icon {
     filter: invert(1);
+}
+
+.card {
+    border: 1px solid var(--tblr-border-color);
+    box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.04);
+    border-radius: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+[data-bs-theme="dark"] .card {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.35);
+}
+
+.card-header {
+    border-bottom: 1px solid var(--tblr-border-color);
+    background-color: transparent;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+.card-title {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Vertical Sidebar Navigation                                                */
+/* -------------------------------------------------------------------------- */
+.navbar-vertical {
+    border-right: 1px solid var(--tblr-border-color);
+}
+
+[data-bs-theme="dark"] .navbar-vertical {
+    background-color: #0d131f;
+}
+
+.navbar-vertical .navbar-brand {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid var(--tblr-border-color);
+    margin-bottom: 0.5rem;
+}
+
+.navbar-vertical .navbar-nav .nav-item .nav-link {
+    border-radius: 6px;
+    margin: 2px 8px;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+    border-left: 3px solid transparent;
+    transition: all 0.15s ease;
+}
+
+.navbar-vertical .navbar-nav .nav-item .nav-link:hover {
+    background-color: color-mix(in srgb, var(--tblr-primary) 6%, transparent);
+    color: var(--tblr-primary);
+}
+
+.navbar-vertical .navbar-nav .nav-item .nav-link.active {
+    background-color: color-mix(in srgb, var(--tblr-primary) 12%, transparent);
+    color: var(--tblr-primary);
+    border-left-color: var(--tblr-primary);
+    font-weight: 600;
+}
+
+.navbar-vertical .dropdown-item.active,
+.navbar-vertical .dropdown-item:active {
+    background-color: color-mix(in srgb, var(--tblr-primary) 12%, transparent);
+    color: var(--tblr-primary);
+    font-weight: 600;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tables & Hierarchy                                                         */
+/* -------------------------------------------------------------------------- */
+.table thead th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tblr-secondary);
+    background-color: color-mix(in srgb, var(--tblr-body-bg) 60%, var(--tblr-bg-surface));
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+.table tbody tr:hover {
+    background-color: color-mix(in srgb, var(--tblr-primary) 3%, transparent);
+}
+
+/* -------------------------------------------------------------------------- */
+/* SPK SAW Priority Badges                                                    */
+/* -------------------------------------------------------------------------- */
+.badge-priority-top {
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+}
+
+.badge-priority {
+    background-color: color-mix(in srgb, var(--tblr-primary) 12%, transparent);
+    color: var(--tblr-primary);
+    font-weight: 600;
 }

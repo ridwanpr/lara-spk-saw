@@ -150,11 +150,15 @@
 
                             <td class="text-nowrap">
                                 @if (isset($priorities[$ticket->id]))
-                                    <div class="fw-medium text-body">
-                                        Urutan #{{ $priorities[$ticket->id]['rank'] }}
-                                    </div>
-                                    <div class="text-secondary small">
-                                        Skor: {{ number_format($priorities[$ticket->id]['score'], 2) }}
+                                    @php
+                                        $pRank = $priorities[$ticket->id]['rank'];
+                                        $pScore = $priorities[$ticket->id]['score'];
+                                    @endphp
+                                    <span class="badge {{ $pRank === 1 ? 'badge-priority-top text-white' : 'badge-priority' }} mb-1">
+                                        Urutan #{{ $pRank }}
+                                    </span>
+                                    <div class="text-secondary small font-monospace">
+                                        Skor: {{ number_format($pScore, 4) }}
                                     </div>
                                 @else
                                     <span class="text-secondary">-</span>
