@@ -239,40 +239,8 @@
             </div>
         </div>
 
-        {{-- Right Column: Criteria Information & Quick Links --}}
+        {{-- Right Column: Quick Links & Guide --}}
         <div class="col-12 col-lg-4">
-            <div class="card shadow-sm mb-3">
-                <div class="card-header">
-                    <h3 class="card-title">Kriteria Pembobotan SPK</h3>
-                </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @forelse ($criterias as $criteria)
-                            <div class="list-group-item d-flex align-items-center justify-content-between py-3">
-                                <div>
-                                    <div class="fw-medium text-body">
-                                        {{ $criteria->code }}: {{ $criteria->name }}
-                                    </div>
-                                    <div class="text-secondary small">
-                                        Tipe: <span class="fw-medium">{{ ucfirst($criteria->type->value ?? $criteria->type) }}</span>
-                                    </div>
-                                </div>
-                                <span class="badge bg-primary-lt font-monospace fs-4">
-                                    {{ (float) $criteria->weight * 100 }}%
-                                </span>
-                            </div>
-                        @empty
-                            <div class="list-group-item text-secondary small py-3">
-                                Belum ada data kriteria yang dikonfigurasi.
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-                <div class="card-footer text-secondary small">
-                    Formula SAW menghitung nilai preferensi ($V_i$) dari perkalian matriks ternormalisasi dengan bobot kriteria.
-                </div>
-            </div>
-
             <div class="card shadow-sm">
                 <div class="card-header">
                     <h3 class="card-title">Alur Penanganan Tiket</h3>

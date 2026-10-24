@@ -11,7 +11,6 @@ use App\Http\Controllers\Admin\SubCriteriaController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\DocumentationController;
 use App\Models\Asset;
-use App\Models\Criteria;
 use App\Models\RepairTicket;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -40,9 +39,7 @@ Route::middleware('auth')->group(function (): void {
             ->sortBy(fn (RepairTicket $ticket) => $priorities[$ticket->id]['rank'] ?? 999999)
             ->take(5);
 
-        $criterias = Criteria::all();
-
-        return view('welcome', compact('stats', 'topPriorities', 'priorities', 'criterias'));
+        return view('welcome', compact('stats', 'topPriorities', 'priorities'));
     })->name('dashboard');
 
     Route::get('/documentation', DocumentationController::class)->name('documentation');
