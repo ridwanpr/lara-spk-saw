@@ -20,5 +20,6 @@ test('authenticated users can access the dashboard with stats and priorities', f
         ->assertViewIs('welcome')
         ->assertViewHasAll(['stats', 'topPriorities', 'priorities'])
         ->assertSeeText('Dashboard Prioritas Perbaikan')
+        ->assertSeeText('Jumlah Aset Terdaftar')
         ->assertDontSeeText('Kriteria Pembobotan SPK');
 });

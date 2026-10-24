@@ -102,16 +102,19 @@
                             <span class="avatar bg-info-lt text-info rounded">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true" focusable="false">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                                    <path d="M3 12h4l3 8l4 -16l3 8h4"/>
+                                    <path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5"/>
+                                    <path d="M12 12l8 -4.5"/>
+                                    <path d="M12 12l0 9"/>
+                                    <path d="M12 12l-8 -4.5"/>
                                 </svg>
                             </span>
                         </div>
                         <div class="col">
                             <div class="font-weight-medium text-body fw-bold fs-2">
-                                {{ $stats['verified'] }}
+                                {{ $stats['total_assets'] }}
                             </div>
                             <div class="text-secondary small">
-                                Antrean Prioritas SAW
+                                Jumlah Aset Terdaftar
                             </div>
                         </div>
                     </div>
