@@ -10,9 +10,6 @@
                     <li class="breadcrumb-item active" aria-current="page"><a href="#">Tambah</a></li>
                 </ol>
                 <h2 class="page-title">Tambah Tiket Baru</h2>
-                <div class="text-secondary small mt-1">
-                    Buat laporan kerusakan aset untuk dilakukan perbaikan.
-                </div>
             </div>
         </div>
     </div>
@@ -21,7 +18,7 @@
         <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h3 class="card-title">Formulir Tambah Kriteria</h3>
+                    <h3 class="card-title">Formulir Tiket Perbaikan</h3>
                 </div>
                 <form action="{{ route('repair-tickets.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf

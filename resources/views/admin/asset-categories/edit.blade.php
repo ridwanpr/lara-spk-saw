@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Ubah Kategori Aset
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Perbarui nama atau deskripsi kategori inventaris.
-                </div>
             </div>
         </div>
     </div>

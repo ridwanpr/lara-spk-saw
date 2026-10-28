@@ -10,9 +10,6 @@
                     <li class="breadcrumb-item active" aria-current="page"><a href="#">Tambah</a></li>
                 </ol>
                 <h2 class="page-title">Tambah Kriteria Baru</h2>
-                <div class="text-secondary small mt-1">
-                    Tambahkan kriteria baru ke dalam sistem pendukung keputusan.
-                </div>
             </div>
         </div>
     </div>

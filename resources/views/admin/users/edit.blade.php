@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Ubah Data Pengguna
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Perbarui informasi akun, hak akses peran, atau kata sandi pengguna.
-                </div>
             </div>
         </div>
     </div>

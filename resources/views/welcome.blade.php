@@ -4,9 +4,6 @@
     <div class="page-header d-print-none mb-4">
         <div class="row align-items-center">
             <div class="col">
-                <div class="page-pretitle text-secondary">
-                    Sistem Pendukung Keputusan
-                </div>
                 <h2 class="page-title">
                     Dashboard Prioritas Perbaikan
                 </h2>

@@ -58,7 +58,7 @@
 
     if (auth()->check() && auth()->user()->isAdmin()) {
         $primaryNav[] = [
-            'title' => 'Data User',
+            'title' => 'Data Pengguna',
             'url' => route('admin.users.index'),
             'icon' => $icons['users'],
             'active' => request()->routeIs('admin.users.*'),

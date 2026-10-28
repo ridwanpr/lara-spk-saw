@@ -10,9 +10,6 @@
                     <li class="breadcrumb-item active" aria-current="page"><a href="#">Detail</a></li>
                 </ol>
                 <h2 class="page-title">Detail Kriteria</h2>
-                <div class="text-secondary small mt-1">
-                    Edit kriteria dan manajemen sub-kriteria.
-                </div>
             </div>
         </div>
     </div>

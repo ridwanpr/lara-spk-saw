@@ -11,9 +11,6 @@
                         <a href="#">Detail Tiket</a>
                     </li>
                 </ol>
-                <div class="page-pretitle text-secondary">
-                    Detail Tiket
-                </div>
                 <h2 class="page-title font-monospace">
                     {{ $repairTicket->ticket_number }}
                 </h2>

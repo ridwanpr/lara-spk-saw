@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Tambah Aset Baru
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Catat barang inventaris baru beserta lokasi ruangan dan status kondisinya.
-                </div>
             </div>
         </div>
     </div>

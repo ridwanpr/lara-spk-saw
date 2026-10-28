@@ -4,15 +4,9 @@
     <div class="page-header d-print-none mb-3">
         <div class="row align-items-center">
             <div class="col">
-                <div class="page-pretitle text-secondary">
-                    Tiket Perbaikan
-                </div>
                 <h2 class="page-title">
                     Laporan Aset Rusak
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Review dan proses tiket laporan perbaikan.
-                </div>
             </div>
             <div class="col-auto ms-auto d-print-none d-flex gap-2">
                 <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1"

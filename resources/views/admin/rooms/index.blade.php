@@ -4,15 +4,9 @@
     <div class="page-header d-print-none mb-3">
         <div class="row align-items-center">
             <div class="col">
-                <div class="page-pretitle text-secondary">
-                    Master Aset
-                </div>
                 <h2 class="page-title">
                     Data Ruangan
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Kelola data ruangan dan lokasi penempatan aset sekolah.
-                </div>
             </div>
             <div class="col-auto ms-auto d-print-none">
                 <a href="{{ route('admin.rooms.create') }}" class="btn btn-primary d-inline-flex align-items-center gap-1">

@@ -4,9 +4,6 @@
     <div class="page-header d-print-none mb-4">
         <div class="row align-items-center">
             <div class="col">
-                <div class="page-pretitle text-secondary">
-                    Panduan &amp; Spesifikasi Sistem
-                </div>
                 <h2 class="page-title">
                     Dokumentasi Aplikasi
                 </h2>

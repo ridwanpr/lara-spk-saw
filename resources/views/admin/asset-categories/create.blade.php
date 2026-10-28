@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Tambah Kategori Aset
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Daftarkan kelompok kategori baru untuk klasifikasi barang inventaris sekolah.
-                </div>
             </div>
         </div>
     </div>

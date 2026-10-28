@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Ubah Data Ruangan
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Perbarui nama atau kode lokasi ruangan.
-                </div>
             </div>
         </div>
     </div>

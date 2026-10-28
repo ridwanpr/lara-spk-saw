@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Ubah Data Aset
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Perbarui informasi barang, ruangan lokasi, atau status kondisinya.
-                </div>
             </div>
         </div>
     </div>

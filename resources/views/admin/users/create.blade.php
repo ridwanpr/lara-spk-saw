@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Tambah Pengguna Baru
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Daftarkan akun staf, inspektur sarpras, atau administrator baru ke dalam sistem.
-                </div>
             </div>
         </div>
     </div>

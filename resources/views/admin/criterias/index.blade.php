@@ -4,15 +4,9 @@
     <div class="page-header d-print-none mb-3">
         <div class="row align-items-center">
             <div class="col">
-                <div class="page-pretitle text-secondary">
-                    Manajemen SPK
-                </div>
                 <h2 class="page-title">
                     Pengaturan SPK
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Kelola data kriteria, sub kriteria dan bobot untuk perhitungan SPK (Sistem Pendukung Keputusan).
-                </div>
             </div>
             <div class="col-auto ms-auto d-print-none">
                 <a href="{{ route('admin.criterias.create') }}"

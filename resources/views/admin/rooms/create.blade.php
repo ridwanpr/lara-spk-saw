@@ -12,9 +12,6 @@
                 <h2 class="page-title">
                     Tambah Ruangan Baru
                 </h2>
-                <div class="text-secondary small mt-1">
-                    Daftarkan ruangan atau lokasi baru untuk penempatan aset sekolah.
-                </div>
             </div>
         </div>
     </div>
