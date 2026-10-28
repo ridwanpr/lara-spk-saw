@@ -15,9 +15,9 @@
     --tblr-primary: #6366f1;
     --tblr-primary-rgb: 99, 102, 241;
     --tblr-primary-fg: #ffffff;
-    --tblr-body-bg: #0b0f19;
-    --tblr-bg-surface: #111827;
-    --tblr-bg-surface-secondary: #1f2937;
+    --tblr-body-bg: #0f0f0f;
+    --tblr-bg-surface: #181818;
+    --tblr-bg-surface-secondary: #242424;
     --tblr-border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -62,8 +62,9 @@
     border-right: 1px solid var(--tblr-border-color);
 }
 
-[data-bs-theme="dark"] .navbar-vertical {
-    background-color: #0d131f;
+[data-bs-theme="dark"] .navbar-vertical,
+[data-bs-theme="dark"] header.navbar {
+    background-color: #141414;
 }
 
 .navbar-vertical .navbar-brand {
@@ -91,6 +92,22 @@
     color: var(--tblr-primary);
     border-left-color: var(--tblr-primary);
     font-weight: 600;
+}
+
+.navbar-vertical .navbar-nav .nav-section-title {
+    display: block;
+    padding: 0.625rem 1rem 0.25rem;
+    margin-top: 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--tblr-secondary);
+}
+
+.navbar-vertical .navbar-nav .nav-section-title:first-child {
+    margin-top: 0;
+    padding-top: 0.25rem;
 }
 
 .navbar-vertical .dropdown-item.active,

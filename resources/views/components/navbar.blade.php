@@ -12,66 +12,85 @@
             '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true" focusable="false"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg>',
         'file-type-doc' =>
             '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true" focusable="false"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M5 12v-7a2 2 0 0 1 2 -2h7l5 5v4" /><path d="M5 15v6h1a2 2 0 0 0 2 -2v-2a2 2 0 0 0 -2 -2h-1" /><path d="M20 16.5a1.5 1.5 0 0 0 -3 0v3a1.5 1.5 0 0 0 3 0" /><path d="M12.5 15a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1 -3 0v-3a1.5 1.5 0 0 1 1.5 -1.5" /></svg>',
+        'category' =>
+            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true" focusable="false"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M4 4h6v6h-6z" /><path d="M14 4h6v6h-6z" /><path d="M4 14h6v6h-6z" /><path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" /></svg>',
+        'door' =>
+            '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true" focusable="false"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M14 12v.01" /><path d="M3 21h18" /><path d="M6 21v-16a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v16" /></svg>',
     ];
 
-    $primaryNav = [
+    $navGroups = [
         [
-            'title' => 'Beranda',
-            'url' => route('dashboard'),
-            'icon' => $icons['home'],
-            'active' => request()->routeIs('dashboard'),
+            'header' => null,
+            'items' => [
+                [
+                    'title' => 'Beranda',
+                    'url' => route('dashboard'),
+                    'icon' => $icons['home'],
+                    'active' => request()->routeIs('dashboard'),
+                ],
+            ],
         ],
     ];
 
     if (auth()->check() && auth()->user()->isAdmin()) {
-        $primaryNav[] = [
-            'title' => 'Master Aset',
-            'url' => 'javascript:void(0)',
-            'icon' => $icons['box'],
-            'active' => request()->routeIs('admin.assets.*', 'admin.asset-categories.*', 'admin.rooms.*'),
-            'children' => [
+        $navGroups[] = [
+            'header' => 'Master Aset',
+            'items' => [
                 [
                     'title' => 'Data Aset',
                     'url' => route('admin.assets.index'),
+                    'icon' => $icons['box'],
                     'active' => request()->routeIs('admin.assets.*'),
                 ],
                 [
                     'title' => 'Kategori Aset',
                     'url' => route('admin.asset-categories.index'),
+                    'icon' => $icons['category'],
                     'active' => request()->routeIs('admin.asset-categories.*'),
                 ],
                 [
                     'title' => 'Data Ruangan',
                     'url' => route('admin.rooms.index'),
+                    'icon' => $icons['door'],
                     'active' => request()->routeIs('admin.rooms.*'),
                 ],
             ],
         ];
     }
 
-    $primaryNav[] = [
-        'title' => 'Tiket Perbaikan',
-        'url' => route('repair-tickets.index'),
-        'icon' => $icons['clipboard-list'],
-        'active' => request()->routeIs('repair-tickets.*'),
+    $navGroups[] = [
+        'header' => 'Layanan',
+        'items' => [
+            [
+                'title' => 'Tiket Perbaikan',
+                'url' => route('repair-tickets.index'),
+                'icon' => $icons['clipboard-list'],
+                'active' => request()->routeIs('repair-tickets.*'),
+            ],
+        ],
     ];
 
     if (auth()->check() && auth()->user()->isAdmin()) {
-        $primaryNav[] = [
-            'title' => 'Data Pengguna',
-            'url' => route('admin.users.index'),
-            'icon' => $icons['users'],
-            'active' => request()->routeIs('admin.users.*'),
+        $navGroups[] = [
+            'header' => 'Sistem',
+            'items' => [
+                [
+                    'title' => 'Data Pengguna',
+                    'url' => route('admin.users.index'),
+                    'icon' => $icons['users'],
+                    'active' => request()->routeIs('admin.users.*'),
+                ],
+                [
+                    'title' => 'Pengaturan SPK',
+                    'url' => route('admin.criterias.index'),
+                    'icon' => $icons['settings'],
+                    'active' => request()->routeIs('admin.criterias.*'),
+                ],
+            ],
         ];
     }
 
-    $sideNav = [
-        [
-            'title' => 'Pengaturan SPK',
-            'url' => route('admin.criterias.index'),
-            'icon' => $icons['settings'],
-            'active' => request()->routeIs('admin.criterias.*'),
-        ],
+    $bottomNav = [
         [
             'title' => 'Dokumentasi',
             'url' => route('documentation'),
@@ -159,46 +178,31 @@
 
         <nav class="collapse navbar-collapse" id="sidebar-menu">
             <ul class="navbar-nav pt-lg-3">
-                @foreach ($primaryNav as $item)
-                    @if (!empty($item['children']))
-                        <li class="nav-item dropdown {{ $item['active'] ? 'active' : '' }}">
-                            <a class="nav-link dropdown-toggle {{ $item['active'] ? 'show' : '' }}"
-                                href="{{ $item['url'] }}" data-bs-toggle="dropdown"
-                                data-bs-auto-close="outside" role="button"
-                                aria-expanded="{{ $item['active'] ? 'true' : 'false' }}">
-                                <span class="nav-link-icon">
-                                    {!! $item['icon'] !!}
-                                </span>
-                                <span class="nav-link-title">{{ $item['title'] }}</span>
-                            </a>
-                            <div class="dropdown-menu {{ $item['active'] ? 'show' : '' }}">
-                                @foreach ($item['children'] as $child)
-                                    <a class="dropdown-item {{ $child['active'] ? 'active' : '' }}"
-                                        href="{{ $child['url'] }}">
-                                        {{ $child['title'] }}
-                                    </a>
-                                @endforeach
-                            </div>
-                        </li>
-                    @else
-                        <li class="nav-item {{ $item['active'] ? 'active' : '' }}">
-                            <a class="nav-link" href="{{ $item['url'] }}">
-                                <span class="nav-link-icon">
-                                    {!! $item['icon'] !!}
-                                </span>
-                                <span class="nav-link-title">{{ $item['title'] }}</span>
-                            </a>
+                @foreach ($navGroups as $group)
+                    @if (!empty($group['header']))
+                        <li class="nav-section-title">
+                            {{ $group['header'] }}
                         </li>
                     @endif
+                    @foreach ($group['items'] as $item)
+                        <li class="nav-item {{ $item['active'] ? 'active' : '' }}">
+                            <a class="nav-link {{ $item['active'] ? 'active' : '' }}" href="{{ $item['url'] }}">
+                                <span class="nav-link-icon">
+                                    {!! $item['icon'] !!}
+                                </span>
+                                <span class="nav-link-title">{{ $item['title'] }}</span>
+                            </a>
+                        </li>
+                    @endforeach
                 @endforeach
             </ul>
 
             <div class="mt-auto">
                 <div class="nav-divider my-2"></div>
                 <ul class="navbar-nav">
-                    @foreach ($sideNav as $item)
+                    @foreach ($bottomNav as $item)
                         <li class="nav-item {{ $item['active'] ? 'active' : '' }}">
-                            <a class="nav-link" href="{{ $item['url'] }}">
+                            <a class="nav-link {{ $item['active'] ? 'active' : '' }}" href="{{ $item['url'] }}">
                                 <span class="nav-link-icon">
                                     {!! $item['icon'] !!}
                                 </span>
