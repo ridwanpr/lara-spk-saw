@@ -119,7 +119,7 @@
                                             : $item->role?->name ?? '-';
                                     $badgeClass = match ($roleKey) {
                                         'admin' => 'bg-blue-lt',
-                                        'inspector' => 'bg-teal-lt',
+                                        'inspector' => 'bg-azure-lt',
                                         'staff' => 'bg-secondary-lt',
                                         default => 'bg-secondary-lt',
                                     };

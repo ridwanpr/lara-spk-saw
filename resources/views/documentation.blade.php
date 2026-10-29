@@ -174,7 +174,7 @@
                                 <tbody>
                                     <tr>
                                         <td>
-                                            <span class="badge bg-purple-lt fw-bold">Admin</span>
+                                            <span class="badge bg-blue-lt fw-bold">Admin</span>
                                         </td>
                                         <td>
                                             Pengelolaan penuh data master dan parameter kalkulasi SPK.
@@ -185,7 +185,7 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span class="badge bg-blue-lt fw-bold">Inspector</span>
+                                            <span class="badge bg-azure-lt fw-bold">Inspector</span>
                                         </td>
                                         <td>
                                             Pemeriksaan teknis dan penilaian kriteria kerusakan aset.
@@ -196,7 +196,7 @@
                                     </tr>
                                     <tr>
                                         <td>
-                                            <span class="badge bg-green-lt fw-bold">Staff</span>
+                                            <span class="badge bg-secondary-lt fw-bold">Staff</span>
                                         </td>
                                         <td>
                                             Pelaporan aset rusak dan pemantauan perbaikan.
@@ -370,7 +370,7 @@
                 <section id="kriteria-bobot" class="card shadow-sm doc-section">
                     <div class="card-header">
                         <div class="d-flex align-items-center gap-2">
-                            <span class="avatar avatar-sm bg-indigo-lt text-indigo rounded">
+                            <span class="avatar avatar-sm bg-teal-lt text-teal rounded">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" aria-hidden="true" focusable="false">
                                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                                     <path d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065" />

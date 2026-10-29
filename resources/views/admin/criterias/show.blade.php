@@ -38,7 +38,7 @@
                 <div class="card-header d-flex justify-content-between items-center">
                     <h3 class="card-title">Formulir Edit Kriteria</h3>
                     @if ($criteria->is_system)
-                        <span class="badge bg-purple-lt">Kriteria Sistem</span>
+                        <span class="badge bg-teal-lt">Kriteria Sistem</span>
                     @endif
                 </div>
 
